@@ -1,0 +1,569 @@
+/* --------------------------------------- ESTRUCTURA GENERAL --------------------------------------- */
+
+/* Todos los elementos resetean márgenes, padding y definen la fuente */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Html y body ocupan toda la pantalla y no permiten scroll */
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Body organiza el layout en horizontal y establece color de fondo */
+body {
+    display: flex;
+    background-color: #f0f2f5;
+}
+
+
+/* ---------------------------------------- PANEL IZQUIERDO ---------------------------------------- */
+
+/* Contenedor lateral con la lista de chats y pestañas */
+.sidebar {
+    width: 30%;
+    height: 100%;
+    background-color: #ffffff;
+    border-right: 1px solid #d1d7db;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cabecera del panel lateral con usuario e iconos de acción */
+.header {
+    height: 60px;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    justify-content: space-between;
+}
+
+/* Contenedor de la caja de búsqueda de chats */
+.search-container {
+    padding: 10px;
+    background-color: #f0f2f5;
+}
+
+/* Cuadro de búsqueda de texto con estilo redondeado */
+.search-box {
+    background-color: white;
+    border-radius: 20px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+/* Input de texto dentro del cuadro de búsqueda */
+.search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 5px;
+    font-size: 15px;
+}
+
+/* Contenedor de las pestañas para cambiar entre WhatsApp y Correo */
+.tabs {
+    display: flex;
+    background-color: #f0f2f5;
+    border-bottom: 1px solid #d1d7db;
+}
+
+/* Cada pestaña del selector de tipo de chat */
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: 15px 0;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* Pestaña activa resaltada con subrayado y color verde */
+.tab.active {
+    border-bottom: 3px solid #25d366;
+    color: #25d366;
+}
+
+
+/* ------------------------- LISTADO DE CHATS Y ELEMENTOS INDIVIDUALES ------------------------- */
+
+/* Lista vertical de chats desplazable */
+.chat-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Contenedor individual de cada chat */
+.chat-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid #f0f2f5;
+    cursor: pointer;
+}
+
+/* Efecto al pasar el ratón sobre un chat */
+.chat-item:hover {
+    background-color: #f5f6f6;
+}
+
+/* Foto de perfil circular dentro del chat */
+.profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #dfe5e7;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7376;
+    font-weight: bold;
+}
+
+/* Contenedor de la información del chat (nombre y mensaje) */
+.chat-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Fila superior con nombre del chat y hora */
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+/* Nombre del remitente del chat */
+.chat-name {
+    font-weight: 500;
+}
+
+/* Hora del último mensaje */
+.chat-time {
+    font-size: 12px;
+    color: #667781;
+}
+
+/* Vista previa del mensaje en la lista */
+.chat-message {
+    font-size: 14px;
+    color: #667781;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+
+/* -------------------------------- PANEL PRINCIPAL DEL CHAT -------------------------------- */
+
+/* Contenedor general de los mensajes y panel activo */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px); /* 60px de alto de .main-navigation */
+    overflow: hidden;
+}
+
+/* Cabecera superior con información del contacto */
+.message-header {
+    height: 60px;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-left: 1px solid #d1d7db;
+    align-items: center;
+}
+
+/* Contenedor con la foto y nombre del contacto */
+.contact-info {
+    display: flex;
+    align-items: center;
+}
+
+/* Área central donde se muestran los mensajes */
+.message-area {
+    flex: 1;
+    background-color: #efeae2;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d1d7db' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Burbuja de mensaje común */
+.message {
+    max-width: 65%;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 7.5px;
+    position: relative;
+    font-size: 14.2px;
+    line-height: 19px;
+}
+
+/* Estilo para mensajes recibidos */
+.message-received {
+    background-color: white;
+    align-self: flex-start;
+    border-top-left-radius: 0;
+}
+
+/* Estilo para mensajes enviados */
+.message-sent {
+    background-color: #d9fdd3;
+    align-self: flex-end;
+    border-top-right-radius: 0;
+}
+
+/* Hora pequeña debajo de cada mensaje */
+.message-time {
+    font-size: 11px;
+    color: #667781;
+    text-align: right;
+    margin-top: 2px;
+}
+
+
+/* ------------------------------ ZONA DE ESCRITURA DE MENSAJES ------------------------------ */
+
+/* Contenedor inferior para escribir nuevos mensajes */
+.message-type {
+    padding: 10px;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+}
+
+.message-type .icon svg {
+    stroke: #54656f;
+    transition: stroke 0.2s ease;
+    vertical-align: middle;
+}
+
+.message-type .icon:hover svg {
+    stroke: #1a73e8; 
+}
+
+
+/* Input de texto para escribir mensaje */
+.message-input {
+    flex: 1;
+    background-color: white;
+    border-radius: 20px;
+    padding: 9px 12px;
+    margin: 5px 10px;
+    border: none;
+    outline: none;
+    resize: none;
+    overflow-y: hidden;
+    font-size: 15px;
+    line-height: 24px;
+    max-height: 240px; /* 10 líneas aprox */
+}
+
+
+/* Contenedor de iconos (emoji, clip, micrófono) */
+.message-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    color: #54656f;
+    font-size: 24px;
+}
+
+/* Estilo común de los iconos clicables */
+.icon {
+    margin: 0 10px;
+    cursor: pointer;
+}
+
+
+/* -------------------------------- CONTENIDO DE LOS EMAILS -------------------------------- */
+/* Panel de contenido del correo electrónico */
+.email-content {
+    padding: 20px;
+    background-color: white;
+    overflow-y: auto;
+    height: calc(100vh - 120px); /* altura ajustada para permitir scroll */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* separación entre mensajes */
+}
+
+
+/* Encabezado del correo con título y metadatos */
+.email-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #d1d7db;
+    padding-bottom: 10px;
+}
+
+/* Título del correo */
+.email-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+/* Fila con datos del remitente y destinatario */
+.email-meta {
+    display: flex;
+    justify-content: space-between;
+    color: #667781;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+/* Cuerpo del mensaje del correo */
+.email-body {
+    line-height: 1.5;
+}
+
+.chat-container {
+        display: flex;
+        flex: 1;
+        height: calc(100vh - 60px); /* 60px = altura de .main-navigation */
+}
+
+/* --------------------------------------- UTILIDADES --------------------------------------- */
+
+/* Clase auxiliar para ocultar elementos en búsquedas */
+.hidden {
+    display: none !important;
+}
+
+.pending-indicator {
+    width: 10px;
+    height: 10px;
+    background-color: green;
+    border-radius: 50%;
+    position: absolute;
+    right: 10px;
+    top: calc(50% + 8px); /* antes era 50%, ahora lo desplazamos hacia abajo */
+    transform: translateY(-50%);
+}
+
+.chat-item {
+    position: relative;
+}
+
+.message-container {
+  position: relative;
+}
+
+.floating-button {
+  position: relative;
+  z-index: 2;
+  background-color: #006eff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.floating-button-wrapper {
+  position: absolute;
+  top: -17px;
+  right: 10px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+}
+
+.floating-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;          
+    left: auto;      
+    z-index: 1;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    width: 180px;
+    margin-bottom: 10px;
+}
+
+.floating-menu.hidden {
+    display: none;
+}
+
+.floating-menu-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.floating-menu-item:last-child {
+    border-bottom: none;
+}
+
+.floating-menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+#generated-indicator {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+    margin-left: 12px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.popup-generando {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-generando.active {
+    display: flex;
+}
+
+.popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+.spinner {
+    border: 4px solid #ccc;
+    border-top: 4px solid #2196F3;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+.sublinea {
+    margin-top: 10px;
+    color: #555;
+    font-size: 0.9em;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.mensaje-adjunto {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background-color: rgba(0, 119, 204, 0.1);
+    border-left: 4px solid #0077cc;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0077cc;
+    transition: background-color 0.2s ease;
+}
+
+.mensaje-adjunto a {
+    color: #0077cc;
+    text-decoration: none;
+}
+
+.mensaje-adjunto a:hover {
+    text-decoration: underline;
+}
+
+.toggle-no-contestado {
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid #ccc;
+    background-color: #f5f5f5;
+    color: #333;
+    transition: all 0.2s ease-in-out;
+    margin-left: 10px;
+}
+
+.toggle-no-contestado:hover {
+    background-color: #e6f2e6;
+    border-color: #a8d5a8;
+}
+
+.toggle-no-contestado.activo {
+    background-color: #d9fdd3;
+    color: #1a7f37;
+    font-weight: bold;
+    border-color: #b2e0b2;
+}
+
+.message-header {
+    height: 60px;
+    background-color: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-left: 1px solid #d1d7db;
+}
+
+#estado-manual-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+/* Cambia el color del SVG al pasar el ratón */
+#estado-manual-header:hover svg {
+    stroke: #d93025; /* rojo más visible */
+    transform: scale(1.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.icon-header {
+    font-size: 16px;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.icon-header:hover {
+    color: #1a73e8;
+}
+
+.mensaje-dia {
+    text-align: center;
+    margin: 18px auto 10px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #54656f;
+    background: #e9edef;
+    border-radius: 6px;
+    padding: 4px 12px;
+    display: inline-block;
+}

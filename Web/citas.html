@@ -1,0 +1,925 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citas</title>
+
+    <!--  ESTILOS  -->
+    <link rel="stylesheet" href="estilos.css">         <!-- Hoja de estilos externa para general y barra superior -->
+    <link rel="stylesheet" href="estilos_citas.css">   <!-- Hoja de estilos externa para la página en concreto -->
+</head>
+<body>
+    <!-- Navegación superior -->
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="calendario.html">Calendario</a></li>
+            <li><a href="chat.html">Chat</a></li>
+            <li><a href="documentacion.html">Documentación</a></li>
+            <li><a href="citas.html" class="active">Citas</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="citas-container">
+        <div class="citas-main">
+        <!-- Columna izquierda -->
+        <div class="citas-pendientes">
+            <h3>Citas pendientes</h3>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="disponibilidad">
+            <div id="disponibilidad-semanal" class="schedule">
+                <div class="day-title">
+                    <div id="titulo-dia-rango"></div>
+                </div>
+                <div class="header-dias">
+                <div class="vacio"></div>
+                <div class="dia">LUN</div>
+                <div class="dia">MAR</div>
+                <div class="dia">MIÉ</div>
+                <div class="dia">JUE</div>
+                <div class="dia">VIE</div>
+                <div class="dia">SÁB</div>
+                <div class="dia">DOM</div>
+                </div>
+                <div class="hours-column" id="columna-horas"></div>
+                <div class="task-container" id="task-container"></div>
+            </div>
+
+            <div class="barra-semana">
+                <button id="semana-actual" class="btn-naranja">Semana actual</button>
+                <button id="semana-anterior" class="btn-azul">&lt;</button>
+                <button id="semana-siguiente" class="btn-azul">&gt;</button>
+
+                <button id="btn-bloque-personal" class="btn-azul" style="margin-left: 2rem;">Agregar asuntos personales</button>
+            </div>
+
+            <div id="popup-detalle-cita" class="popup-overlay-cita" style="display: none;">
+                <div class="popup-cita-detalle">
+                    <h3 id="detalle-titulo">Detalles de la cita</h3>
+                    <button class="cerrar-btn" id="cerrar-popup-detalle">×</button>
+                    <p><strong>Descripción:</strong> <span id="detalle-descripcion"></span></p>
+                    <p><strong>Cliente:</strong> <span id="detalle-cliente"></span></p>
+                    <p><strong>Localidad:</strong> <span id="detalle-poblacion"></span></p>
+                    <p><strong>Día:</strong> <span id="detalle-dia"></span></p>
+                    <p><strong>Hora:</strong> <span id="detalle-hora"></span></p>
+                    <div id="formulario-edicion" style="display: none; flex-direction: column; gap: 0.5rem;">
+                        <label>Descripción: <input type="text" id="editar-descripcion"></label>
+                        <label>Población: <input type="text" id="editar-poblacion"></label>
+                        <label>Día: <input type="date" id="editar-dia"></label>
+                        <label>Hora: <input type="time" id="editar-hora"></label>
+                    </div>
+                    <div class="acciones-cita">
+                        <button id="btn-editar-cita" class="btn-azul">Editar</button>
+                        <button id="btn-borrar-cita" class="btn-rojo">Borrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Popup agregar asunto personal-->
+        <div id="popup-bloque-personal" class="popup-overlay" style="display: none;">
+            <div class="popup-formulario">
+                <h3>Agregar asunto personal</h3>
+                
+                <label>Fecha: <input type="date" id="personal-fecha"></label>
+
+                <label><input type="checkbox" id="personal-dia-completo"> Todo el día</label>
+
+                <div id="horas-container">
+                <label>Hora inicio: <input type="time" id="personal-hora-inicio"></label>
+                <label>Hora fin: <input type="time" id="personal-hora-fin"></label>
+                </div>
+
+                <label><input type="checkbox" id="personal-repetir"> Repetir semanalmente</label>
+
+                <div id="repeticion-opciones" style="display: none;">
+                <div>Días de la semana:</div>
+                <label><input type="checkbox" value="1"> L</label>
+                <label><input type="checkbox" value="2"> M</label>
+                <label><input type="checkbox" value="3"> X</label>
+                <label><input type="checkbox" value="4"> J</label>
+                <label><input type="checkbox" value="5"> V</label>
+                <label><input type="checkbox" value="6"> S</label>
+                <label><input type="checkbox" value="0"> D</label>
+                <label>Hasta: <input type="date" id="personal-repetir-hasta"></label>
+                </div>
+
+                <label>Motivo:
+                <input type="text" id="personal-motivo" value="Asuntos personales">
+                </label>
+
+                <label>Dirección:
+                <input type="text" id="personal-direccion">
+                </label>
+
+                <label>Población:
+                <input type="text" id="personal-poblacion">
+                </label>
+
+                <div style="margin-top: 1rem;">
+                <button id="guardar-bloque-personal" class="btn-azul">Guardar</button>
+                <button id="cancelar-bloque-personal" class="btn-azul" style="background-color: gray;">Cancelar</button>
+                </div>
+            </div>
+            </div>
+
+
+            <!-- Popup de propuestas de cita -->
+            <div id="popup-propuesta" class="popup-propuesta oculto">
+                <div class="popup-header">
+                    <h3>Propuesta de disponibilidad</h3>
+                    <button id="cerrar-popup-propuesta" class="cerrar-btn">×</button>
+                </div>
+
+                <div class="popup-contenido">
+                    <div class="tarjeta-cliente">
+                        <div class="icono-cliente">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5.121 17.804A10.97 10.97 0 0112 15c2.086 0 4.028.636 5.623 1.715M15 11a3 3 0 11-6 0 3 3 0 016 0zm6 1a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+
+                        <div class="contenido-cliente">
+                            <div class="cliente-nombre" id="popup-nombre-cliente">[Nombre Cliente]</div>
+                            <div class="cliente-descripcion" id="popup-descripcion">[Descripción del trabajo]</div>
+                        </div>
+                    </div>
+
+                    <div class="tarjeta-duracion">
+                        <div class="icono-duracion">
+                            <span class="titulo-duracion">Duración estimada</span>
+                        </div>
+                        <div class="selector-tiempo">
+                            <div class="bloque-tiempo">
+                                <input type="number" id="duracion-horas" min="0" max="12" value="00">
+                                <div class="unidad-tiempo">horas</div>
+                            </div>
+                            <span>:</span>
+                            <div class="bloque-tiempo">
+                                <input type="number" id="duracion-minutos" min="0" max="59" step="10" value="00">
+                                <div class="unidad-tiempo">minutos</div>
+                            </div>
+                        </div>
+
+                        <p class="nota-duracion">Usaremos este tiempo para calcular los huecos disponibles.</p>
+                    </div>
+
+
+                    <div style="display: flex; justify-content: center; margin-top: 1rem;">
+                        <button id="btn-generar-huecos" class="btn-azul">Ver huecos disponibles</button>
+                    </div>
+
+                    <div id="propuestas-generadas"></div>
+                    <div style="display: flex; justify-content: center; margin-top: 1rem;">
+                        <button id="btn-nueva-opcion" class="btn-azul">Añadir nueva opción</button>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <button id="btn-confirmar-propuesta" class="btn-verde" style="width: 100%; font-size: 1rem; font-weight: 600; display: none;">
+                            Confirmar y enviar propuesta de cita
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="popup-enviar-cita" class="popup-overlay oculto">
+                <div class="popup-confirmacion">
+                    <h3 id="popup-confirmar-titulo">¿Confirmar envío?</h3>
+                    <div id="mensaje-cita-enviado" class="mensaje-simulado">
+                        <p id="texto-mensaje-cita" style="white-space: pre-line;"></p>
+                    </div>
+                    <div class="botones-popup">
+                        <button id="btn-enviar-cita-final" class="btn-verde">Confirmar y enviar</button>
+                        <button onclick="cerrarPopupEnviarCita()" class="btn-gris">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            
+    </div>
+
+    <script>
+        async function cargarCitasPendientes() {
+            try {
+                const res = await fetch("/api/presupuestos_firmados");
+                const citas = await res.json();
+                const contenedor = document.querySelector(".citas-pendientes");
+
+                contenedor.innerHTML = `<h3>Citas pendientes</h3>`;
+
+                if (!Array.isArray(citas) || citas.length === 0) {
+                    contenedor.innerHTML += `<p style="color: var(--color-gray-500); padding: 1rem 0;">No hay citas pendientes.</p>`;
+                    return;
+                }
+
+                window.citasPorId = {}; 
+
+                citas.forEach(cita => {
+                    window.citasPorId[cita.id_trabajo] = {
+                        ...cita,
+                        canal: cita.canal,
+                        identificador_cliente: cita.identificador_cliente
+                    };
+                    const card = document.createElement("div");
+                    card.classList.add("cita-card");
+
+                    card.innerHTML = `
+                        <h4>${cita.nombre_cliente}</h4>
+                        <p>${cita.descripcion}</p>
+                        <button class="btn-proponer" data-id="${cita.id_trabajo}">Proponer disponibilidad</button>
+                    `;
+
+                    contenedor.appendChild(card);
+
+                    card.querySelector(".btn-proponer").addEventListener("click", () => abrirPopupPropuesta(cita.id_trabajo));
+                });
+
+            } catch (error) {
+                console.error("Error cargando citas:", error);
+            }
+        }
+
+
+        function obtenerLunesDe(fecha) {
+            const dia = fecha.getDay();
+            const diff = (dia === 0 ? -6 : 1) - dia;
+            const lunes = new Date(fecha);
+            lunes.setDate(lunes.getDate() + diff);
+            lunes.setHours(0, 0, 0, 0);
+            return lunes;
+        }
+
+        let fechaInicioSemana = obtenerLunesDe(new Date());
+
+        let versionRender = 0;
+        async function renderizarSemana() {
+            const estaVersion = ++versionRender;
+            const dias = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(fechaInicioSemana.getTime()); 
+                d.setDate(d.getDate() + i);
+                dias.push(d);
+            }
+
+            const titulo = document.getElementById("titulo-dia-rango");
+            if (!titulo) {
+                console.warn("No se encontró #titulo-dia-rango");
+                return;
+            }
+
+            const opciones = { day: "numeric", month: "long" };
+            titulo.textContent = `${dias[0].toLocaleDateString("es-ES", opciones)} - ${dias[6].toLocaleDateString("es-ES", opciones)}`;
+
+            // Verificamos contenedores
+            const horasColumn = document.getElementById("columna-horas");
+            const tareas = document.getElementById("task-container");
+            
+            if (!horasColumn || !tareas) {
+                console.error("No se encontraron columnas de horas o tareas");
+                return;
+            }
+
+            horasColumn.innerHTML = "";
+            for (let h = 8; h <= 20; h++) {
+                const celda = document.createElement("div");
+                celda.className = "hour-cell";
+                celda.textContent = `${h}:00`;
+                horasColumn.appendChild(celda);
+            }
+
+            tareas.innerHTML = "";
+            tareas.style.display = "grid";
+            tareas.style.gridTemplateColumns = "repeat(7, 1fr)";
+            tareas.style.gridTemplateRows = "repeat(52, 8.8px)";
+            tareas.style.backgroundImage =
+                "linear-gradient(to right, var(--color-gray-200) 1px, transparent 1px), linear-gradient(to bottom, var(--color-gray-200) 1px, transparent 1px)";
+            tareas.style.backgroundSize = "calc(100% / 7) 100%, 100% 8.8px";
+            tareas.style.backgroundRepeat = "repeat";
+
+            for (let fila = 0; fila < 52; fila++) {
+                for (let col = 0; col < 7; col++) {
+                    const vacia = document.createElement("div");
+                    tareas.appendChild(vacia);
+                }
+            }
+
+            for (let i = 0; i < 7; i++) {
+                const fecha = dias[i].toLocaleDateString('sv-SE');
+
+                // verificar que esta llamada aún es válida
+                if (estaVersion !== versionRender) {
+                    return;
+                }
+                try {
+                    const res = await fetch(`/api/horarios?fecha=${fecha}`);
+                    const eventos = await res.json();
+
+                    eventos.forEach(ev => {
+                        const [horaStr, minStr] = ev.hora.split(":");
+                        const h = parseInt(horaStr);
+                        const m = parseInt(minStr);
+                        const inicioBloque = ((h - 8) * 4) + Math.floor(m / 15);
+                        const bloques = Math.ceil(ev.duracion / 15);
+                        const celda = document.createElement("div");
+
+                        celda.classList.add("task-cell");
+                        celda.style.gridColumn = `${i + 1}`;
+                        celda.style.gridRow = `${inicioBloque + 1} / span ${bloques}`;
+                        // crear contenedor interno con texto
+                        const contenido = document.createElement("div");
+                        contenido.textContent = ev.descripcion;
+                        contenido.style.whiteSpace = "normal";
+                        contenido.style.overflow = "hidden";
+                        contenido.style.textOverflow = "ellipsis";
+                        contenido.style.display = "-webkit-box";
+                        contenido.style.webkitLineClamp = "1000"; // se ajustará luego
+                        contenido.style.webkitBoxOrient = "vertical";
+                        contenido.style.lineHeight = "1.2";
+                        contenido.style.fontSize = "0.7rem";
+
+                        celda.appendChild(contenido);
+
+                        const celdaAltura = celda.clientHeight;
+                        const contenidoAltura = contenido.scrollHeight;
+
+                        // Si el contenido no cabe → limitar líneas y cortar
+                        if (contenidoAltura > celdaAltura) {
+                            const lineHeight = parseFloat(window.getComputedStyle(contenido).lineHeight);
+                            const maxLines = Math.floor(celdaAltura / lineHeight);
+
+                            contenido.style.webkitLineClamp = maxLines.toString();
+                        } else {
+                            contenido.style.overflow = "visible";
+                            contenido.style.textOverflow = "unset";
+                            contenido.style.webkitLineClamp = "unset";
+                        }
+
+
+                        if (ev.estado === "confirmado") celda.classList.add("task-confirmado");
+                        else if (ev.estado === "ocupado") celda.classList.add("task-ocupado");
+
+                        // Atributos extra para popup
+                        celda.dataset.descripcion = ev.descripcion;
+                        celda.dataset.idCliente = ev.id_cliente;
+                        celda.dataset.poblacion = ev.poblacion;
+
+                        // Evento click para mostrar popup
+                        celda.addEventListener("click", async (e) => {
+                            mostrarPopupDetalle(ev, dias[i].toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }));
+
+                            // cerrar al hacer clic fuera
+                            setTimeout(() => {
+                                const popup = document.getElementById("popup-detalle-cita");
+                                document.addEventListener("click", function cerrar(evento) {
+                                    if (!popup.contains(evento.target)) {
+                                        popup.style.display = "none";
+                                        document.removeEventListener("click", cerrar);
+                                    }
+                                });
+                            }, 10);
+                        });
+                        tareas.appendChild(celda);
+                    });
+
+                } catch (error) {
+                    console.error(`Error cargando eventos para el día ${fecha}:`, error);
+                }
+            }
+
+        }
+
+        document.getElementById("semana-anterior").addEventListener("click", () => {
+            fechaInicioSemana.setDate(fechaInicioSemana.getDate() - 7);
+            renderizarSemana();
+        });
+
+        document.getElementById("semana-siguiente").addEventListener("click", () => {
+            fechaInicioSemana.setDate(fechaInicioSemana.getDate() + 7);
+            renderizarSemana();
+        });
+
+        document.getElementById("semana-actual").addEventListener("click", () => {
+            fechaInicioSemana = obtenerLunesDe(new Date());
+            renderizarSemana();
+        });
+
+
+
+        // Popup agregar asuntos personales
+        function configurarPopupBloquePersonal() {
+        const btnAbrir = document.getElementById("btn-bloque-personal");
+        const popup = document.getElementById("popup-bloque-personal");
+        const btnCancelar = document.getElementById("cancelar-bloque-personal");
+        const chkTodoDia = document.getElementById("personal-dia-completo");
+        const chkRepetir = document.getElementById("personal-repetir");
+        const contHoras = document.getElementById("horas-container");
+        const contRepeticion = document.getElementById("repeticion-opciones");
+
+        btnAbrir.addEventListener("click", () => popup.style.display = "flex");
+        btnCancelar.addEventListener("click", () => popup.style.display = "none");
+
+        chkTodoDia.addEventListener("change", e => {
+            contHoras.style.display = e.target.checked ? "none" : "block";
+        });
+
+        chkRepetir.addEventListener("change", e => {
+            contRepeticion.style.display = e.target.checked ? "block" : "none";
+        });
+
+        document.getElementById("guardar-bloque-personal").addEventListener("click", guardarBloquePersonal);
+    }
+
+    async function guardarBloquePersonal() {
+        const fecha = document.getElementById("personal-fecha").value;
+        const todoDia = document.getElementById("personal-dia-completo").checked;
+        const horaInicio = document.getElementById("personal-hora-inicio").value;
+        const horaFin = document.getElementById("personal-hora-fin").value;
+
+        const repetir = document.getElementById("personal-repetir").checked;
+        const repetirHasta = document.getElementById("personal-repetir-hasta").value;
+        const diasRepetir = Array.from(document.querySelectorAll("#repeticion-opciones input[type=checkbox]:checked"))
+                                .map(cb => parseInt(cb.value));
+
+        const motivo = document.getElementById("personal-motivo").value || "Asuntos personales";
+        const direccion = document.getElementById("personal-direccion").value;
+        const poblacion = document.getElementById("personal-poblacion").value;
+
+        if (!fecha) {
+            alert("Falta la fecha");
+            return;
+        }
+
+        if (!todoDia && (!horaInicio || !horaFin)) {
+            alert("Faltan hora de inicio o fin");
+            return;
+        }
+
+        const payload = {
+            fecha,
+            todo_dia: todoDia,
+            hora_inicio: horaInicio,
+            hora_fin: horaFin,
+            motivo,
+            direccion,
+            poblacion,
+            repetir,
+            repetir_hasta: repetirHasta,
+            dias_semana: diasRepetir
+        };
+
+        try {
+            const res = await fetch("/api/insertar_bloque_personal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (data.ok) {
+                alert("Bloque añadido correctamente");
+                document.getElementById("popup-bloque-personal").style.display = "none";
+                renderizarSemana();
+            } else {
+                alert("Error: " + (data.error || "desconocido"));
+            }
+        } catch (err) {
+            console.error("Error al guardar bloque personal:", err);
+            alert("Error de conexión");
+        }
+    }
+
+    // Popup parte izquierda
+    let idTrabajoActivo = null;
+
+    function configurarPopupPropuesta() {
+        const btnCerrar = document.getElementById("cerrar-popup-propuesta");
+        const btnGenerar = document.getElementById("btn-generar-huecos");
+        const btnNueva = document.getElementById("btn-nueva-opcion");
+        const contenedor = document.getElementById("propuestas-generadas");
+
+        // Cerrar
+        btnCerrar.addEventListener("click", cerrarPopupPropuesta);
+
+        // Generar huecos simulados
+        btnGenerar.addEventListener("click", generarHuecosSimulados);
+
+        // Añadir nueva
+        btnNueva.addEventListener("click", () => {
+            contenedor.appendChild(crearBloqueOpcion(""));
+        });
+
+        // Eliminar bloque
+        contenedor.addEventListener("click", function (e) {
+            if (e.target.matches(".borrar-opcion")) {
+                e.target.closest(".opcion").remove();
+            }
+        });
+    }
+
+    function abrirPopupPropuesta(idTrabajo) {
+        idTrabajoActivo = idTrabajo;
+        const cita = window.citasPorId?.[idTrabajo];
+        if (cita) {
+            document.getElementById("popup-nombre-cliente").textContent = cita.nombre_cliente || "";
+            document.getElementById("popup-descripcion").textContent = cita.descripcion || "";
+        }
+        document.getElementById("popup-propuesta").classList.remove("oculto");
+        document.getElementById("propuestas-generadas").innerHTML = "";
+        activarReordenacionPropuestas();
+
+        // Cambiar visibilidad de botones
+        document.getElementById("btn-generar-huecos").style.display = "inline-block";
+        document.getElementById("btn-nueva-opcion").style.display = "none";
+        document.getElementById("btn-confirmar-propuesta").style.display = "none";
+
+    }
+
+    function cerrarPopupPropuesta() {
+        document.getElementById("popup-propuesta").classList.add("oculto");
+        idTrabajoActivo = null;
+    }
+
+    function crearBloqueOpcion(valor) {
+        const div = document.createElement("div");
+        div.className = "opcion concepto-row";
+        div.setAttribute('draggable', 'true');
+
+        div.innerHTML = `
+            <div class="drag-handle" title="Arrastrar">☰</div>
+            <input type="datetime-local" value="${valor}">
+            <span class="preview-legible">${formatearFechaBonita(valor)}</span>
+            <button class="remove-row-btn borrar-opcion" title="Eliminar">🗑</button>
+        `;
+
+        div.querySelector('.remove-row-btn').addEventListener('click', () => div.remove());
+
+        return div;
+    }
+
+    async function generarHuecosSimulados() {
+        const h = parseInt(document.getElementById("duracion-horas").value);
+        const m = parseInt(document.getElementById("duracion-minutos").value);
+        const duracion = (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+
+        if (duracion <= 0) {
+            alert("Introduce una duración válida");
+            return;
+        }
+
+        if (!idTrabajoActivo) {
+            alert("Error: no hay trabajo seleccionado.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/buscar_huecos?id_trabajo=${idTrabajoActivo}&duracion=${duracion}`);
+            const data = await res.json();
+
+            const contenedor = document.getElementById("propuestas-generadas");
+            contenedor.innerHTML = "";
+
+            if (!Array.isArray(data) || data.length === 0) {
+                contenedor.innerHTML = `<p style="color: var(--color-gray-500); font-style: italic;">No hay huecos disponibles.</p>`;
+                return;
+            }
+
+            data.forEach(datetime => {
+                contenedor.appendChild(crearBloqueOpcion(datetime));
+            });
+            activarReordenacionPropuestas();
+        
+            // Cambiar visibilidad de botones
+            document.getElementById("btn-generar-huecos").style.display = "none";
+            document.getElementById("btn-nueva-opcion").style.display = "inline-block";
+            document.getElementById("btn-confirmar-propuesta").style.display = "block";
+
+        } catch (err) {
+            console.error("Error buscando huecos:", err);
+            alert("Error al buscar huecos disponibles");
+        }
+    }
+
+    function crearBloqueOpcion(valor) {
+        const div = document.createElement("div");
+        div.className = "opcion concepto-row";
+        div.setAttribute('draggable', 'true');
+
+        div.innerHTML = `
+            <div class="drag-handle" title="Arrastrar">☰</div>
+            <input type="datetime-local" value="${valor}">
+            <button class="remove-row-btn borrar-opcion" title="Eliminar">🗑</button>
+        `;
+
+        div.querySelector('.remove-row-btn').addEventListener('click', () => div.remove());
+
+        return div;
+    }
+
+    function activarReordenacionPropuestas() {
+        const container = document.getElementById('propuestas-generadas');
+
+        container.querySelectorAll('.opcion').forEach(row => {
+            row.setAttribute('draggable', true);
+            row.addEventListener('dragstart', (e) => {
+                row.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            row.addEventListener('dragend', () => {
+                row.classList.remove('dragging');
+            });
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(container, e.clientY);
+            const dragging = container.querySelector('.dragging');
+            if (afterElement == null) {
+                container.appendChild(dragging);
+            } else {
+                container.insertBefore(dragging, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const rows = [...container.querySelectorAll('.opcion:not(.dragging)')];
+            return rows.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+    }
+
+    let eventoActivo = null;
+
+    function mostrarPopupDetalle(ev, diaTexto) {
+        eventoActivo = ev;
+        const popup = document.getElementById("popup-detalle-cita");
+        popup.style.display = "flex";
+
+        document.getElementById("detalle-descripcion").textContent = ev.descripcion || "(Sin descripción)";
+        document.getElementById("detalle-cliente").textContent =
+            ev.id_cliente === -1
+                ? "(Asunto personal)"
+                : (ev.nombre && ev.nombre.trim()) || "(Sin nombre)";
+        document.getElementById("detalle-poblacion").textContent = ev.poblacion || "";
+        document.getElementById("detalle-dia").textContent = diaTexto;
+        document.getElementById("detalle-hora").textContent = ev.hora || "";
+
+        // Prellenar los inputs
+        document.getElementById("editar-descripcion").value = ev.descripcion || "";
+        document.getElementById("editar-poblacion").value = ev.poblacion || "";
+        document.getElementById("editar-hora").value = ev.hora || "";
+        const fechaISO = new Date(ev.fecha).toISOString().split("T")[0];
+        document.getElementById("editar-dia").value = fechaISO;
+
+        document.getElementById("btn-editar-cita").onclick = activarModoEdicionCita;
+    }
+
+    function configurarCerrarPopupDetalle() {
+        document.getElementById("cerrar-popup-detalle").addEventListener("click", () => {
+            document.getElementById("popup-detalle-cita").style.display = "none";
+
+            // Restaurar visibilidad de los campos de solo lectura
+            document.getElementById("formulario-edicion").style.display = "none";
+            document.querySelectorAll("#popup-detalle-cita p").forEach(p => p.style.display = "block");
+
+            // Restaurar botones originales
+            const acciones = document.querySelector(".acciones-cita");
+            acciones.innerHTML = `
+                <button id="btn-editar-cita" class="btn-azul">Editar</button>
+                <button id="btn-borrar-cita" class="btn-rojo">Borrar</button>
+            `;
+
+            document.getElementById("btn-editar-cita").onclick = activarModoEdicionCita;
+            document.getElementById("btn-borrar-cita").onclick = () => borrarCita(eventoActivo);
+        });
+    }
+
+
+
+    
+    async function guardarEdicion() {
+        const descripcion = document.getElementById("editar-descripcion").value;
+        const poblacion = document.getElementById("editar-poblacion").value;
+        const hora = document.getElementById("editar-hora").value;
+        const fecha = document.getElementById("editar-dia").value;
+
+        const payload = {
+            id: eventoActivo.id_horario, 
+            descripcion,
+            poblacion,
+            hora,
+            fecha
+        };
+
+        const res = await fetch("/api/actualizar_horario", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.ok) {
+            alert("Actualizado correctamente");
+            document.getElementById("popup-detalle-cita").style.display = "none";
+            renderizarSemana();  // refresca
+        } else {
+            alert("Error al actualizar");
+        }
+    }
+
+    function cancelarEdicion() {
+        document.getElementById("formulario-edicion").style.display = "none";
+
+        // Restaurar el contenido visual original
+        document.querySelectorAll("#popup-detalle-cita p").forEach(p => p.style.display = "block");
+
+        const acciones = document.querySelector(".acciones-cita");
+        acciones.innerHTML = `
+            <button id="btn-editar-cita" class="btn-azul">Editar</button>
+            <button id="btn-borrar-cita" class="btn-rojo">Borrar</button>
+        `;
+
+        document.getElementById("btn-editar-cita").onclick = activarModoEdicionCita;
+        document.getElementById("btn-borrar-cita").onclick = () => borrarCita(eventoActivo);
+    }
+
+
+    function activarModoEdicionCita() {
+        document.getElementById("formulario-edicion").style.display = "flex";
+
+        document.querySelectorAll("#popup-detalle-cita p").forEach(p => {
+            p.style.display = "none";
+        });
+
+        const acciones = document.querySelector(".acciones-cita");
+        acciones.innerHTML = `
+            <button id="btn-guardar-cita" class="btn-azul">Guardar cambios</button>
+            <button id="btn-cancelar-edicion" class="btn-rojo">Cancelar</button>
+        `;
+
+        document.getElementById("btn-guardar-cita").onclick = guardarEdicion;
+        document.getElementById("btn-cancelar-edicion").onclick = cancelarEdicion;
+    }
+
+    async function borrarCita(cita) {
+        const confirmacion = confirm("¿Estás seguro de que quieres borrar esta cita?");
+        if (!confirmacion) return;
+
+        try {
+            const res = await fetch("/api/borrar_horario", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: cita.id_horario })
+            });
+
+            const data = await res.json();
+            if (data.ok) {
+                alert("Cita eliminada correctamente");
+                document.getElementById("popup-detalle-cita").style.display = "none";
+                renderizarSemana();
+            } else {
+                alert("Error al eliminar cita");
+            }
+        } catch (err) {
+            console.error("Error al borrar cita:", err);
+            alert("Error de conexión");
+        }
+    }
+
+    function confirmarYEnviarPropuesta() {
+        const citas = obtenerTextoPropuestaActual();
+        if (citas.length === 0) {
+            alert("No hay ninguna cita propuesta para enviar.");
+            return;
+        }
+
+        const datosCliente = window.citasPorId?.[idTrabajoActivo];
+        if (!datosCliente || !datosCliente.canal || !datosCliente.identificador_cliente) {
+            alert("No se han podido obtener los datos del cliente.");
+            return;
+        }
+
+        const mensaje = generarTextoMensajeCitas(citas);
+        mostrarPopupEnviarCita(mensaje, datosCliente);
+    }
+
+
+    function mostrarPopupEnviarCita(mensaje, datosCliente) {
+        const popup = document.getElementById("popup-enviar-cita");
+        const texto = document.getElementById("texto-mensaje-cita");
+
+        texto.innerHTML = mensaje.replace(/\n/g, "<br>");
+
+        document.getElementById("popup-propuesta").style.display = "none";
+
+        const titulo = document.getElementById("popup-confirmar-titulo");
+        const nombreCliente = datosCliente?.nombre_cliente || "";
+        titulo.textContent = `¿Confirmar envío a ${nombreCliente}?`;
+
+        const cita = window.citasPorId[idTrabajoActivo];
+
+        popup.classList.remove("oculto");
+
+        document.getElementById("btn-enviar-cita-final").onclick = () => {
+            fetch("/api/enviar_propuesta_cita", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    canal: cita.canal,
+                    identificador_cliente: cita.identificador_cliente,
+                    mensaje: mensaje
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) {
+                    alert("Propuesta enviada correctamente.");
+                    cerrarPopupEnviarCita();
+                    cerrarPopupPropuesta();
+                } else {
+                    alert("Error al enviar el mensaje.");
+                }
+            })
+            .catch(err => {
+                console.error("Error al enviar:", err);
+                alert("Error inesperado al enviar el mensaje.");
+            });
+        };
+    }
+
+    function cerrarPopupEnviarCita() {
+        document.getElementById("popup-enviar-cita").classList.add("oculto");
+        document.getElementById("popup-propuesta").style.display = "flex";
+
+        }
+
+    // Genera el cuerpo del mensaje que se va a enviar
+    function generarTextoMensajeCitas(lista) {
+        const cuerpo = lista.map(f => {
+            const limpio = f.replace("- ", "").trim();
+            return `- ${formatearFechaBonita(limpio)}`;
+        }).join("\n");
+
+        return `Analizando mis horarios para esta semana, te propongo estas opciones para la cita:\n${cuerpo}\nConfírmame cuál te vendría mejor y la agendamos.`;
+    }
+    function configurarEnvioPropuesta() {
+        document.getElementById("btn-confirmar-propuesta").addEventListener("click", confirmarYEnviarPropuesta);
+    }
+
+    // Extrae del DOM las citas escritas por el usuario
+    function obtenerTextoPropuestaActual() {
+        const contenedor = document.getElementById("propuestas-generadas");
+        if (!contenedor) return [];
+
+        const bloques = contenedor.querySelectorAll("input[type='datetime-local']");
+        const resultados = [];
+
+        bloques.forEach(input => {
+            const valor = input.value.trim();
+            if (valor) resultados.push(`- ${valor}`);
+        });
+
+        return resultados;
+    }
+
+    function formatearFechaBonita(fechaISO) {
+        const fecha = new Date(fechaISO);
+        if (isNaN(fecha.getTime())) return "(fecha inválida)";
+
+        const opciones = { weekday: "long", day: "numeric", month: "long" };
+        const dia = fecha.toLocaleDateString("es-ES", opciones);
+
+        // Capitaliza primera letra (día de la semana)
+        const capitalizado = dia.charAt(0).toUpperCase() + dia.slice(1);
+
+        const hora = fecha.toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' });
+        return `${capitalizado} a las ${hora}`;
+    }
+
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarCitasPendientes();
+        renderizarSemana();
+        configurarPopupBloquePersonal(); 
+        configurarPopupPropuesta();
+        configurarCerrarPopupDetalle();
+        configurarEnvioPropuesta(); 
+    });
+    </script>
+</body>
+</html>

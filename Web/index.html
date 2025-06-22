@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestion de Negocio</title>
+
+    <!--  ESTILOS  -->
+    <link rel="stylesheet" href="estilos.css">        <!-- Hoja de estilos externa para general y barra superior -->
+    <link rel="stylesheet" href="estilos_index.css">  <!-- Hoja de estilos externa para la página en concreto -->
+
+    <!-- ----------------------------- LIBRERÍAS EXTERNAS ----------------------------------- -->
+    <!-- Librería Leaflet para visualización de mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- Fuente Inter desde Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Barra de navegación con enlaces a cada sección -->
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="index.html" class="active">Inicio</a></li>
+            <li><a href="calendario.html">Calendario</a></li>
+            <li><a href="chat.html">Chat</a></li>
+            <li><a href="documentacion.html">Documentacion</a></li>
+            <li><a href="citas.html">Citas</a></li>
+        </ul>
+    </nav>
+
+    <!-- Cabecera con título y subtítulo -->
+    <section class="home-hero">
+        <h1 class="home-title">Asvora</h1>
+        <p class="home-subtitle">Gestión clara, rápida y eficaz</p>
+    </section>
+
+    <!-- Contenedor principal de los bloques -->
+    <div class="home-grid">
+        <!-- MAIN BLOCK (CALENDARIO.HTML): horario diario + mapa -->
+        <div class="calendario-block">
+            <div class="schedule">
+                <div class="day-title"><div id="dayTitleCell"></div></div>
+                <div class="hours-column"></div>
+                <div class="task-container" id="taskContainer"></div>
+            </div>
+
+            <div class="map-container" id="map-container">
+                <div id="map-upper"></div>
+                <div id="route-container">
+                    <h3>Recorrido del día</h3>
+                    <div id="route-info"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-block resumen-chat" onclick="window.location.href='chat.html'">
+            <div class="canal-chat whatsapp">
+                <div class="canal-titulo">
+                    <span class="icono-canal">📱</span> WhatsApp
+                </div>
+                <div class="contador-mensajes" id="contador-whatsapp">– sin contestar</div>
+                <div class="resumen-conversaciones" id="resumen-whatsapp"></div>
+            </div>
+            <div class="canal-chat correo">
+                <div class="canal-titulo">
+                    <span class="icono-canal">✉️</span> Correo
+                </div>
+                <div class="contador-mensajes" id="contador-correo">– sin contestar</div>
+                <div class="resumen-conversaciones" id="resumen-correo"></div>
+            </div>
+        </div>
+
+        <div class="chat-block resumen-documentacion" onclick="window.location.href='documentacion.html'">
+            <div class="canal-chat presupuestos">
+                <div class="canal-titulo">
+                <span class="icono-canal">📑</span> Presupuestos
+                </div>
+                <div class="resumen-conversaciones doc">
+                <div class="info-doc">
+                    <div class="linea-doc">🔴 <span id="pre-pendiente">–</span> pendientes</div>
+                    <div class="linea-doc">🟠 <span id="pre-revisado">–</span> revisados</div>
+                    <div class="linea-doc">🟢 <span id="pre-firmado">–</span> firmados</div>
+                </div>
+                <canvas id="grafico-presupuestos" width="70" height="70"></canvas>
+                </div>
+            </div>
+
+            <div class="canal-chat facturas">
+                <div class="canal-titulo">
+                <span class="icono-canal">💰</span> Facturas
+                </div>
+                <div class="resumen-conversaciones doc">
+                <div class="info-doc">
+                    <div class="linea-doc">🔴 <span id="fac-pendiente">–</span> pendientes</div>
+                    <div class="linea-doc">🟠 <span id="fac-revisado">–</span> a falta de pago</div>
+                </div>
+                <canvas id="grafico-facturas" width="70" height="70"></canvas>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="chat-block resumen-citas" onclick="window.location.href='citas.html'">
+            <div class="canal-chat citas">
+                <div class="canal-titulo">
+                    <span class="icono-canal">📋</span> Citas
+                </div>
+                <div class="contador-mensajes" id="contador-citas">– sin confirmar</div>
+                <div class="resumen-conversaciones" id="resumen-citas"></div>
+            </div>
+            <div class="canal-chat agenda">
+                <div class="canal-titulo">
+                    <span class="icono-canal">📅</span> Agenda confirmada
+                </div>
+                <div class="resumen-conversaciones agenda" id="agenda-semanal"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ------------------------------ CALENDARIO.HTML -------------------------------------------------
+        // Función para limpiar el mapa
+        function clearMap() {
+            const mapContainer = document.getElementById('map-container');
+            mapContainer.innerHTML = `
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 500px; padding: 2rem; text-align: center;">
+                    <div style="font-size: 3rem;">🗺️</div>
+                    <p style="margin-top: 1rem; font-size: 0.95rem; color: var(--color-secondary);">
+                        El recorrido del día aparecerá aquí cuando haya tareas programadas.
+                    </p>
+                </div>
+            `;
+        }
+
+        // Normaliza la dirección
+        function normalizarDireccion(direccion, poblacion, cp, provincia) {
+            if (!direccion || !poblacion || !cp || !provincia) return "";
+
+            let dir = direccion.trim();
+            dir = dir.replace(/^C\/|^c\/|^Calle\/|^calle\./i, "Calle ");
+            dir = dir.replace(/^Avda\.?|^Av\.?/i, "Avenida ");
+            dir = dir.replace(/^Plza\.?|^Plz\.?/i, "Plaza ");
+            dir = dir.replace(/\s{2,}/g, ' ');
+
+            return `${dir}, ${cp}, ${poblacion}, ${provincia}`;
+        }
+
+        async function getCoordinates(location) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function getRoute(start, end) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.code !== 'Ok') return null;
+
+                return {
+                    route: data.routes[0].geometry,
+                    distance: (data.routes[0].distance / 1000).toFixed(1),
+                    duration: Math.round(data.routes[0].duration / 60)
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        async function loadMap(horarios) {
+            const mapContainer = document.getElementById('map-container');
+            mapContainer.innerHTML = `
+                <div id="map-upper"></div>
+                <div id="route-container">
+                    <h3>Recorrido del día</h3>
+                    <div id="route-info"></div>
+                </div>
+            `;
+
+            const map = L.map('map-upper');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            const bounds = [];
+            const locationData = [];
+            const promises = [];
+
+            horarios.forEach((item, index) => {
+                const location = normalizarDireccion(item.direccion, item.poblacion, item.cp, item.provincia);
+                if (location.trim() !== "") {
+                    promises.push(getCoordinates(location));
+                    locationData.push({ eventNum: index + 1, ...item, location });
+                }
+            });
+
+            const coordinatesArray = await Promise.all(promises);
+
+            for (let i = 0; i < locationData.length; i++) {
+                const coordinates = coordinatesArray[i];
+                if (coordinates) {
+                    locationData[i].coordinates = coordinates;
+                    L.marker(coordinates).addTo(map)
+                        .bindPopup(`<strong>${locationData[i].descripcion}</strong><br>${locationData[i].estado}<br>${locationData[i].location}`)
+                        .bindTooltip(locationData[i].eventNum.toString(), { permanent: true, direction: 'center' });
+                    bounds.push(coordinates);
+                }
+            }
+
+            if (bounds.length > 0) {
+                map.fitBounds(L.latLngBounds(bounds));
+            } else {
+                map.setView([40.4168, -3.7038], 6);
+            }
+
+            const routeInfo = document.getElementById('route-info');
+            routeInfo.innerHTML = '';
+            if (locationData.length < 2) {
+                routeInfo.innerHTML = '<p class="text-center">No hay suficientes ubicaciones para mostrar un recorrido.</p>';
+                return;
+            }
+
+            for (let i = 0; i < locationData.length - 1; i++) {
+                const current = locationData[i];
+                const next = locationData[i + 1];
+                if (current.coordinates && next.coordinates) {
+                    const routeData = await getRoute(current.coordinates, next.coordinates);
+                    if (routeData) {
+                        L.geoJSON(routeData.route, { style: { color: '#4f5d75', weight: 4, opacity: 0.7, dashArray: '5, 10' } }).addTo(map);
+                        routeInfo.innerHTML += `
+                            <div class="route-segment">
+                                <div class="segment-number">${i + 1}</div>
+                                <div class="segment-info">
+                                    <div class="segment-location">De: ${current.direccion}, ${current.poblacion}</div>
+                                    <div class="segment-location">A: ${next.direccion}, ${next.poblacion}</div>
+                                    <div class="segment-details">
+                                        <span class="route-time">${routeData.duration} min</span>
+                                        <span class="route-distance">${routeData.distance} km</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+
+        async function loadSchedule(fecha, year, month, day) {
+            const dayTitleCell = document.getElementById('dayTitleCell');
+            const taskContainer = document.getElementById('taskContainer');
+            const hoursColumn = document.querySelector('.hours-column');
+
+            const nombresDias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const nombresMeses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+            const fechaObj = new Date(year, month, day);
+            dayTitleCell.textContent = `${nombresDias[fechaObj.getDay()]}, ${day} de ${nombresMeses[month]} de ${year}`;
+
+            const response = await fetch(`/api/horarios?fecha=${fecha}`);
+            const horarios = await response.json();
+
+            if (!Array.isArray(horarios) || horarios.length === 0) {
+                createEmptySchedule();
+                const noEventsMessage = document.createElement('div');
+                noEventsMessage.classList.add('no-events-message');
+                noEventsMessage.innerHTML = "No hay eventos programados para este día.";
+                document.querySelector('.schedule').appendChild(noEventsMessage);
+                clearMap();
+                return;
+            }
+
+            taskContainer.innerHTML = "";
+            hoursColumn.innerHTML = "";
+            const hours = Array.from({ length: 13 }, (_, i) => 8 + i);
+            hours.forEach(hour => {
+                const hourCell = document.createElement('div');
+                hourCell.classList.add('hour-cell');
+                hourCell.textContent = `${hour}:00`;
+                hoursColumn.appendChild(hourCell);
+            });
+
+            horarios.forEach((item, index) => {
+                const [h, m] = item.hora.split(':').map(Number);
+                const startTime = ((h - 8) * 4) + Math.floor(m / 15);
+                const rowSpan = Math.ceil(item.duracion / 15);
+                const startRow = startTime + 1;
+
+                const cell1 = document.createElement('div');
+                cell1.classList.add('task-cell');
+                cell1.style.gridRow = `${startRow} / span ${rowSpan}`;
+                cell1.style.gridColumn = '1';
+                cell1.innerHTML = `<strong>${item.descripcion}</strong>`;
+
+                const cell2 = document.createElement('div');
+                cell2.classList.add('task-cell');
+                cell2.style.gridRow = `${startRow} / span ${rowSpan}`;
+                cell2.style.gridColumn = '2';
+                cell2.textContent = item.direccion || '';
+
+                const cell3 = document.createElement('div');
+                cell3.classList.add('task-cell');
+                cell3.style.gridRow = `${startRow} / span ${rowSpan}`;
+                cell3.style.gridColumn = '3';
+                cell3.textContent = `${item.poblacion} (${item.provincia})`;
+
+                taskContainer.appendChild(cell1);
+                taskContainer.appendChild(cell2);
+                taskContainer.appendChild(cell3);
+            });
+
+            loadMap(horarios);
+        }
+
+        function createEmptySchedule() {
+            document.getElementById('taskContainer').innerHTML = "";
+            const hoursColumn = document.querySelector('.hours-column');
+            hoursColumn.innerHTML = "";
+            const hours = Array.from({ length: 14 }, (_, i) => 8 + i);
+            hours.forEach(hour => {
+                const hourCell = document.createElement('div');
+                hourCell.classList.add('hour-cell');
+                hourCell.textContent = `${hour}:00`;
+                hoursColumn.appendChild(hourCell);
+            });
+        }
+
+        // ------------------------------ CHAT.HTML -------------------------------------------------
+        async function cargarResumenChatBlock() {
+            const [whatsapps, correos, estados] = await Promise.all([
+                fetch('/api/whatsapps').then(r => r.json()),
+                fetch('/api/correos').then(r => r.json()),
+                fetch('/api/estado_conversaciones').then(r => r.json())
+            ]);
+
+            function cargarResumen(canal, datos, contenedorId, contadorId) {
+                const resumen = {};
+                datos.forEach(m => {
+                    const nombre = m.tipo_mensaje === 'entrante' ? m.remitente : m.destinatario;
+                    if (!resumen[nombre] || new Date(m.fecha) > new Date(resumen[nombre].fecha)) {
+                        resumen[nombre] = m;
+                    }
+                });
+
+                const entradas = Object.entries(resumen)
+                    .map(([nombre, mensaje]) => ({ nombre, mensaje }))
+                    .filter(({ nombre }) => {
+                        const estado = estados.find(e => e.remitente === nombre && e.canal === canal);
+                        return estado?.chat === "no contestado";
+                    })
+                    .sort((a, b) => new Date(b.mensaje.fecha) - new Date(a.mensaje.fecha))
+                    .slice(0, 2);
+
+                const contenedor = document.getElementById(contenedorId);
+                contenedor.innerHTML = '';
+                entradas.forEach(({ nombre, mensaje }) => {
+                    const hora = new Date(mensaje.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    const preview = (mensaje.mensaje || '📎 Archivo').slice(0, 40) + (mensaje.mensaje?.length > 40 ? '…' : '');
+                    const estado = estados.find(e => e.remitente === nombre && e.canal === canal)?.chat;
+                    const estaPendiente = estado === "no contestado";
+
+                    const linea = document.createElement('div');
+                    linea.className = 'linea';
+                    linea.innerHTML = `
+                        <div>${nombre} – <span style="color:var(--color-secondary);">${hora}</span></div>
+                        <div>${preview} ${estaPendiente ? '<span class="estado">●</span>' : ''}</div>
+                    `;
+                    contenedor.appendChild(linea);
+                });
+
+                const totalPendientes = estados.filter(e => e.canal === canal && e.chat === "no contestado").length;
+                document.getElementById(contadorId).textContent = 
+                totalPendientes === 1
+                    ? '1 mensaje sin contestar'
+                    : `${totalPendientes} mensajes sin contestar`;
+            }
+
+            cargarResumen('whatsapp', whatsapps, 'resumen-whatsapp', 'contador-whatsapp');
+            cargarResumen('correo', correos, 'resumen-correo', 'contador-correo');
+        }
+
+        
+        // ---------------------------------- CITAS.HTML ----------------------------------------------
+        async function cargarResumenCitas() {
+            const hoy = new Date();
+            const fechaISO = hoy.toISOString().split("T")[0];
+
+            const [pendientes, horarios] = await Promise.all([
+                fetch('/api/presupuestos_firmados').then(r => r.json()),
+                fetch(`/api/horarios_semana?fecha=${fechaISO}`).then(r => r.json())
+            ]);
+
+            // ----- Citas pendientes -----
+            document.getElementById("contador-citas").textContent =
+                pendientes.length === 1
+                    ? '1 cita sin confirmar'
+                    : `${pendientes.length} citas sin confirmar`;
+
+            // Generar resumen
+            const contenedor = document.getElementById("resumen-citas");
+            contenedor.innerHTML = '';
+
+            pendientes.slice(0, 2).forEach(p => {
+                const preview = (p.descripcion || 'Sin descripción').slice(0, 40) + (p.descripcion?.length > 40 ? '…' : '');
+
+                const linea = document.createElement('div');
+                linea.className = 'linea';
+                linea.innerHTML = `
+                    <div>${p.nombre_cliente}</div>
+                    <div>${preview}</div>
+                `;
+                contenedor.appendChild(linea);
+            });
+
+            // ----- Agenda confirmada -----
+            const dias = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+            const duracionPorDia = {};
+
+            horarios.forEach(ev => {
+                const fecha = new Date(ev.fecha);
+                const dia = dias[fecha.getDay() === 0 ? 6 : fecha.getDay() - 1]; // Ajustar índice
+                duracionPorDia[dia] = (duracionPorDia[dia] || 0) + (ev.duracion || 0);
+            });
+
+            const maxMinutos = Math.max(...Object.values(duracionPorDia), 1);
+            const agendaDiv = document.getElementById("agenda-semanal");
+            agendaDiv.innerHTML = '';
+            let contadorDias = 0;
+
+            dias.forEach(dia => {
+                if (!(dia in duracionPorDia)) return;
+                if (contadorDias >= 3) return;  // 👉 limita a 3 días
+
+                const minutos = duracionPorDia[dia];
+                const horas = Math.floor(minutos / 60);
+                const mins = minutos % 60;
+                const texto = `${horas > 0 ? `${horas}h` : ''}${mins > 0 ? ` ${mins}min` : ''}`.trim();
+
+                const div = document.createElement('div');
+                div.className = 'dia-agenda';
+                div.innerHTML = `
+                    <span>${dia}:</span>
+                    <span>🕒 ${texto}</span>
+                    <div class="barra" style="--porcentaje:${(minutos / maxMinutos) * 100}%"></div>
+                `;
+                agendaDiv.appendChild(div);
+                contadorDias++;  // 👉 suma un día mostrado
+            });
+
+        }
+
+
+
+        // ------------------------------- DOCUMENTACION.HTML ----------------------------------------
+        async function cargarResumenDocumentacion() {
+            const [presupuestos, facturas] = await Promise.all([
+                fetch('/api/documentos_totales?categoria=presupuestos').then(r => r.json()),
+                fetch('/api/documentos_totales?categoria=facturas').then(r => r.json())
+            ]);
+
+            const contar = (lista, estado) => lista.filter(d => d.estado === estado).length;
+
+            // Presupuestos
+            const prePend = contar(presupuestos, "pendiente");
+            const preRev = contar(presupuestos, "revisado");
+            const preFirm = contar(presupuestos, "firmado");
+
+            document.getElementById("pre-pendiente").textContent = prePend;
+            document.getElementById("pre-revisado").textContent = preRev;
+            document.getElementById("pre-firmado").textContent = preFirm;
+
+            new Chart(document.getElementById("grafico-presupuestos"), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pendiente', 'Revisado', 'Firmado'],
+                    datasets: [{
+                        data: [prePend, preRev, preFirm],
+                        backgroundColor: ['#dc3545', '#f0ad4e', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '70%'
+                }
+            });
+
+            // Facturas
+            const facPend = contar(facturas, "pendiente");
+            const facRev = contar(facturas, "revisado");
+            document.getElementById("fac-pendiente").textContent = facPend;
+            document.getElementById("fac-revisado").textContent = facRev;
+
+            new Chart(document.getElementById("grafico-facturas"), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pendiente', 'A falta de pago'],
+                    datasets: [{
+                        data: [facPend, facRev],
+                        backgroundColor: ['#dc3545', '#f0ad4e']
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Al cargar la página: mostrar horario del día
+        document.addEventListener("DOMContentLoaded", () => {
+            // CALENDARIO.HTML
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const day = today.getDate();
+            const fechaISO = today.toISOString().split("T")[0];
+
+            loadSchedule(fechaISO, year, month, day);
+
+            // CHAT.HTML
+            cargarResumenChatBlock();
+
+
+            // DOCUMENTACION.HTML
+            cargarResumenDocumentacion();
+
+            
+            // CITAS.HTML
+            cargarResumenCitas();
+
+        });
+    </script>
+</body>
+</html>

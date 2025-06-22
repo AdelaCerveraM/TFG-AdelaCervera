@@ -1,0 +1,1593 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+
+    <!--  ESTILOS  -->
+    <link rel="stylesheet" href="estilos.css">        <!-- Hoja de estilos externa para general y barra superior -->
+    <link rel="stylesheet" href="estilos_chat.css">   <!-- Hoja de estilos externa para la página en concreto -->
+</head>
+
+<body>
+    <!------------------------------ BARRA SUPERIOR DE NAVEGACIÓN ------------------------------>
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="calendario.html">Calendario</a></li>
+            <li><a href="chat.html" class="active">Chat</a></li>
+            <li><a href="documentacion.html">Documentacion</a></li>
+            <li><a href="citas.html">Citas</a></li>
+        </ul>
+    </nav>
+
+    <!----------------- PANEL LATERAL IZQUIERDO CON LISTA DE CHATS Y BÚSQUEDA ----------------->
+    <div class="chat-container">
+        <div class="sidebar">
+            <!-- Cabecera con perfil y acciones rápidas -->
+            <div class="header">
+                <div class="message-actions">
+                    <div class="icon">✉</div>
+                    <div class="icon toggle-no-contestado" onclick="toggleNoContestado(this)">No respondido</div>
+                </div>
+            </div>
+
+            <!-- Caja de búsqueda -->
+            <div class="search-container">
+                <div class="search-box">
+                    <div class="icon">🔍</div>
+                    <input type="text" id="search-input" placeholder="Buscar chat">
+                </div>
+            </div>
+
+            <!-- Pestañas de cambio entre WhatsApp y Correo -->
+            <div class="tabs">
+                <div class="tab active" id="whatsapp-tab" onclick="switchTab('whatsapp')">WhatsApp</div>
+                <div class="tab" id="email-tab" onclick="switchTab('email')">Correo</div>
+            </div>
+
+            <!-- Listado de chats (WhatsApp y Correo) -->
+            <div class="chat-list" id="whatsapp-chats"></div>
+            <div class="chat-list" id="email-chats" style="display: none;"></div>
+        </div>
+
+        <!-------------------------- PANEL PRINCIPAL CON CONVERSACIONES -------------------------->
+        <div class="main-content">
+            <!-- Cabecera con información del chat seleccionado -->
+            <div class="message-header" id="message-header">
+                <div class="header-left">
+                    <div class="profile-pic" id="header-profile-pic">?</div>
+                    <div class="chat-name" id="header-chat-name">Laura Sánchez</div>
+                </div>
+                <div id="estado-manual-header" class="icon-header" onclick="alternarEstadoManualDesdeHeader()" title="Marcar como no contestado">
+                    <!-- Icono por defecto: check (contestado) -->
+                    <svg id="estado-icono-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#1a7f37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+            </div>
+
+
+            <!-- Área de mensajes de WhatsApp -->
+            <div class="message-area" id="whatsapp-messages" style="display: flex;"></div>
+            
+            <!-- Área de contenido de correo electrónico -->
+            <div class="email-content" id="email-content" style="display: none;">
+                <div class="email-header">
+                    <div class="email-title" id="email-title">Seleccione un correo para ver su contenido</div>
+                    <div class="email-meta">
+                        <div id="email-from"></div>
+                        <div id="email-time"></div>
+                    </div>
+                    <div class="email-meta">
+                        <div id="email-to"></div>
+                        <div id="email-date"></div>
+                    </div>
+                </div>
+                <div class="email-body" id="email-body">
+                </div>
+            </div>
+
+            <!-- Zona inferior para escribir un nuevo mensaje -->
+            <div class="message-container">
+                <div class="floating-button-wrapper">
+                    <button id="btn-generar" class="floating-button">📄+</button>
+                    <div id="floating-menu" class="floating-menu hidden">
+                        <div class="floating-menu-item" id="btn-generar-presupuesto">Presupuesto</div>
+                        <div class="floating-menu-item" id="btn-generar-factura">Factura</div>
+                    </div>
+                </div>
+
+                <div class="message-type">
+                    <!-- Botón adjuntar -->
+                    <div class="icon" onclick="prepararSubidaAdjunto()" title="Adjuntar archivo">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="22">
+                            <path d="M21.44 11.05 12.97 19.5a6.5 6.5 0 0 1-9.19-9.19l10-10a4.24 4.24 0 0 1 6 6l-10 10a2.12 2.12 0 1 1-3-3l9.5-9.5"
+                                stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+
+                    <input type="file" id="input-adjunto" style="display: none" />
+
+                    <textarea class="message-input" id="message-input"
+                            placeholder="Escribe un mensaje aquí"
+                            rows="1"
+                            oninput="handleInputChange(); autoResize(this);"
+                            required></textarea>
+
+                    <div class="icon send-icon" onclick="enviarRespuesta()" title="Enviar mensaje">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="22">
+                            <line x1="22" x2="11" y1="2" y2="13"
+                                stroke="#54656f" stroke-width="2" stroke-linecap="round"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"
+                                    stroke-width="2" fill="none" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+
+
+                <div id="generated-indicator" class="generated-indicator">
+                    Texto generado automáticamente
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP: Generando presupuesto desde chat -->
+    <div id="generating-popup" class="popup-generando">
+        <div class="popup-content">
+            <div class="spinner"></div>
+            <p>Generando presupuesto...</p>
+            <p class="sublinea">Cuando esté listo, aparecerá en Presupuestos &gt; Pendientes a la espera de ser aprobado.</p>
+        </div>
+    </div>
+
+
+    <!--******************************************************************************************************************************************************************************-->
+
+
+    <script>
+        // ------------------- VARIABLES GLOBALES PARA GESTIÓN DE DATOS Y ESTADO ACTUAL -------------------
+        let correosData = [];            // Lista con los correos obtenidos desde la API
+        let whatsappsData = [];          // Lista con los mensajes de WhatsApp desde la API
+        let currentEmailId = null;       // ID del correo actualmente seleccionado
+        let currentWhatsappId = null;    // ID del WhatsApp actualmente seleccionado
+    
+
+        let scrollToBottomOnNextRefresh = false;
+        let estadoConversaciones = [];
+
+
+
+        // ------------- FUNCIÓN PRINCIPAL PARA CARGAR LOS DATOS DESDE LA API Y MOSTRAR LISTAS -------------
+        async function cargarDatos() {
+            try {
+                const [resCorreos, resWhatsapp, resEstados] = await Promise.all([
+                    fetch('/api/correos'),
+                    fetch('/api/whatsapps'),
+                    fetch('/api/estado_conversaciones')  // nueva API
+                ]);
+
+                correosData = await resCorreos.json();
+                whatsappsData = await resWhatsapp.json();
+                estadoConversaciones = await resEstados.json(); 
+
+                cargarListaCorreos();  
+                cargarListaWhatsapp();
+                switchTab('whatsapp');
+                procesarFirmasAutomaticas();
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+            }
+        }
+
+    
+
+        // --------------- FUNCIÓN PARA GENERAR LA LISTA DE CORREOS EN LA COLUMNA IZQUIERDA ---------------
+        function cargarListaCorreos() {
+            const emailChatsContainer = document.getElementById('email-chats');
+            emailChatsContainer.innerHTML = '';
+
+            const correoEmpresa = "empresa.demo.tfg@gmail.com";
+
+            // Agrupar por remitente (solo entrantes)
+            const agrupados = {};
+
+            correosData.forEach(correo => {
+                const esEntrante = correo.tipo_mensaje === 'entrante';
+                const esSalienteValido = correo.tipo_mensaje === 'saliente' && correo.estado === 'enviado';
+
+                const nombreCliente = correo.remitente === correoEmpresa
+                    ? correo.destinatario
+                    : correo.remitente;
+
+                if (!nombreCliente) return;
+
+                if (!agrupados[nombreCliente] || new Date(correo.fecha) > new Date(agrupados[nombreCliente].fecha)) {
+                    if (esEntrante || esSalienteValido) {
+                        agrupados[nombreCliente] = correo;
+                    }
+                }
+            });
+
+            const listaFinal = Object.values(agrupados).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            listaFinal.forEach(correo => {
+                const nombreCliente = correo.remitente === correoEmpresa ? correo.destinatario : correo.remitente;
+                const initialLetter = nombreCliente?.charAt(0).toUpperCase() || "?";
+
+                const fechaCorreo = new Date(correo.fecha);
+                const hoy = new Date();
+                const tiempoFormateado = (fechaCorreo.toDateString() === hoy.toDateString())
+                    ? fechaCorreo.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                    : fechaCorreo.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.dataset.nombre = nombreCliente;
+                chatItem.dataset.search = (nombreCliente + ' ' + correo.asunto).toLowerCase();
+                chatItem.addEventListener('click', () => mostrarCorreoPorNombre(nombreCliente));
+
+                const mensajesDelCliente = correosData.filter(c =>
+                    (c.remitente === nombreCliente && c.destinatario === correoEmpresa) ||
+                    (c.remitente === correoEmpresa && c.destinatario === nombreCliente)
+                );
+                const estado = estadoConversaciones.find(e => e.remitente === nombreCliente && e.canal === 'correo')?.chat;
+
+                let tienePendiente;
+                if (estado !== undefined && estado !== null) {
+                    tienePendiente = estado === "no contestado";
+                } else {
+                    const ultimo = mensajesDelCliente[mensajesDelCliente.length - 1];
+                    tienePendiente = mensajesDelCliente.some(m =>
+                        m.tipo_mensaje === 'saliente' &&
+                        m.estado === 'procesado'
+                    ) && !(ultimo && ultimo.tipo_mensaje === 'saliente' && ultimo.estado === 'enviado');
+                }
+
+                let preview = (correo.asunto || '').trim();
+                if (!preview && correo.ruta_adjunto) {
+                    preview = "📎 Archivo";
+                }
+
+                chatItem.innerHTML = `
+                    <div class="profile-pic">${initialLetter}</div>
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <div class="chat-name">${nombreCliente}</div>
+                            <div class="chat-time">${tiempoFormateado}</div>
+                        </div>
+                        <div class="chat-message">${preview}</div>
+                    </div>
+                    ${tienePendiente ? '<div class="pending-indicator"></div>' : ''}
+                `;
+
+                emailChatsContainer.appendChild(chatItem);
+            });
+
+            if (listaFinal.length > 0 && !currentEmailId) {
+                const nombreInicial = listaFinal[0].remitente === correoEmpresa
+                    ? listaFinal[0].destinatario
+                    : listaFinal[0].remitente;
+                mostrarCorreoPorNombre(nombreInicial);
+            }
+        }
+
+
+
+        function mostrarCorreoPorNombre(nombreCliente) {
+            const correoEmpresa = "empresa.demo.tfg@gmail.com";
+
+            const mensajes = correosData
+                .filter(c =>
+                    (c.remitente === nombreCliente && c.destinatario === correoEmpresa) ||
+                    (c.destinatario === nombreCliente && c.remitente === correoEmpresa)
+                )
+                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            if (mensajes.length === 0) return;
+
+            const ultimoEntrante = [...mensajes]
+                .filter(m => m.tipo_mensaje === 'entrante')
+                .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+
+            if (ultimoEntrante) {
+                currentEmailId = ultimoEntrante.id;
+            } else {
+                currentEmailId = mensajes[mensajes.length - 1]?.id || null;
+            }
+
+            document.getElementById('header-profile-pic').textContent = nombreCliente.charAt(0).toUpperCase();
+            document.getElementById('header-chat-name').textContent = nombreCliente;
+            let estadoObj = estadoConversaciones.find(e => e.remitente === nombreCliente && e.canal === 'correo');
+            let estado;
+
+            if (estadoObj) {
+                estado = estadoObj.chat;
+            } else {
+                const mensajesDelCliente = correosData.filter(m =>
+                    (m.remitente === nombreCliente && m.destinatario === correoEmpresa) ||
+                    (m.remitente === correoEmpresa && m.destinatario === nombreCliente)
+                );
+
+                const ultimo = mensajesDelCliente[mensajesDelCliente.length - 1];
+                const tienePendiente = mensajesDelCliente.some(m =>
+                    m.tipo_mensaje === 'saliente' &&
+                    m.estado === 'procesado'
+                ) && !(ultimo && ultimo.tipo_mensaje === 'saliente' && ultimo.estado === 'enviado');
+
+                estado = tienePendiente ? "no contestado" : "contestado";
+            }
+            actualizarIconoEstadoManual(estado);
+
+            const emailContent = document.getElementById('email-content');
+            emailContent.style.display = 'flex';
+            document.getElementById('whatsapp-messages').style.display = 'none';
+            emailContent.innerHTML = '';
+
+
+            // Añadir encabezado primero
+            const encabezado = document.createElement("div");
+            encabezado.className = "email-header";
+            encabezado.innerHTML = `
+                <div class="email-title">${
+            mensajes
+                .slice()
+                .reverse()
+                .find(m => m.asunto && m.tipo_mensaje === 'saliente' && m.estado === 'enviado')?.asunto
+            || mensajes[mensajes.length - 1].asunto || ''
+        }</div>
+                <div class="email-meta">
+                    <div>De: ${nombreCliente}</div>
+                    <div>${new Date(mensajes[mensajes.length - 1].fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+                <div class="email-meta">
+                    <div>Para: usuario@empresa.com</div>
+                    <div>${new Date(mensajes[mensajes.length - 1].fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+                </div>
+            `;
+            emailContent.appendChild(encabezado);
+
+            // Añadir los mensajes debajo del encabezado
+            mensajes.forEach(mensaje => {
+                if (!(mensaje.tipo_mensaje === 'entrante' || (mensaje.tipo_mensaje === 'saliente' && mensaje.estado === 'enviado'))) return;
+
+                const mensajeDiv = document.createElement('div');
+                mensajeDiv.className = 'email-body';
+                mensajeDiv.style.borderTop = "1px solid #d1d7db";
+                mensajeDiv.style.paddingTop = "10px";
+                mensajeDiv.style.marginTop = "10px";
+
+                mensajeDiv.innerHTML = `
+                    <strong>${mensaje.tipo_mensaje === 'entrante' ? 'Cliente' : 'Nosotros'}</strong> -
+                    <small>${new Date(mensaje.fecha).toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'Europe/Madrid'
+                    })}</small>
+
+                    <p>${mensaje.mensaje.replace(/\r\n/g, '<br>')}</p>
+                `;
+
+                emailContent.appendChild(mensajeDiv);
+            });
+
+            
+            // Buscar si hay un mensaje generado pendiente (estado procesado)
+            const generado = mensajes.find(m =>
+                m.tipo_mensaje === 'saliente' &&
+                m.estado === 'procesado' &&
+                parseInt(m.mensaje_original_id) === parseInt(currentEmailId)  // o currentWhatsappId si usas ese
+            );
+
+            const input = document.getElementById('message-input');
+            if (generado) {
+                input.value = generado.mensaje;
+                input.dataset.generated = generado.generado_por_ia ? "true" : "false";
+                input.dataset.original = generado.mensaje;
+                input.dataset.id = generado.id_correo;
+                document.getElementById('generated-indicator').textContent = generado.generado_por_ia
+                    ? "Texto generado automáticamente"
+                    : "Texto editado manualmente";
+                autoResize(input);
+            } else {
+                input.value = '';
+                input.dataset.generated = "false";
+                input.dataset.original = '';
+                input.dataset.id = '';
+                document.getElementById('generated-indicator').textContent = '';
+                autoResize(input);
+            }
+
+            // Resaltar visualmente el chat activo
+            document.querySelectorAll('#email-chats .chat-item').forEach(item => {
+                item.style.backgroundColor = (item.dataset.nombre === nombreCliente) ? '#f0f2f5' : '';
+            });
+
+            if (scrollToBottomOnNextRefresh) {
+                emailContent.scrollTop = emailContent.scrollHeight;
+                scrollToBottomOnNextRefresh = false;
+            }
+
+            emailContent.scrollTop = emailContent.scrollHeight;
+        }
+
+
+
+        function prepararEnvio() {
+            const idCorreo = currentEmailId;
+            document.getElementById('input-id-correo').value = idCorreo;
+            return true;
+        }
+
+
+
+        // --------- FUNCIÓN PARA GENERAR LA LISTA DE MENSAJES DE WHATSAPP EN LA COLUMNA IZQUIERDA ---------
+        function cargarListaWhatsapp() {
+            const whatsappChatsContainer = document.getElementById('whatsapp-chats');
+            whatsappChatsContainer.innerHTML = '';
+
+            const conversaciones = {};
+
+            whatsappsData.forEach(m => {
+                const nombre = m.tipo_mensaje === 'entrante' ? m.remitente : m.destinatario;
+
+                // Solo incluimos:
+                // - entrante
+                // - saliente con estado "enviado"
+                if (
+                    m.tipo_mensaje === 'entrante' ||
+                    (m.tipo_mensaje === 'saliente' && m.estado === 'enviado')
+                ) {
+                    if (!conversaciones[nombre]) {
+                        conversaciones[nombre] = [];
+                    }
+
+                    conversaciones[nombre].push(m);
+                }
+            });
+
+            const resumenes = Object.entries(conversaciones).map(([nombre, mensajes]) => {
+                const ultimo = mensajes.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+                return { nombre, mensaje: ultimo, fecha: new Date(ultimo.fecha) };
+            });
+
+            resumenes.sort((a, b) => b.fecha - a.fecha);
+
+            resumenes.forEach(({ nombre, mensaje }) => {
+            const initialLetter = nombre.charAt(0).toUpperCase();
+            const fechaChat = new Date(mensaje.fecha);
+            const hoy = new Date();
+            const tiempoFormateado = (fechaChat.toDateString() === hoy.toDateString())
+                ? fechaChat.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                : fechaChat.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+
+            const mensajesConversacion = whatsappsData
+                .filter(m =>
+                    (m.tipo_mensaje === 'entrante' && m.remitente === nombre) ||
+                    (m.tipo_mensaje === 'saliente' && m.destinatario === nombre)
+                )
+                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            const ultimo = mensajesConversacion[mensajesConversacion.length - 1];
+
+            let estadoObj = estadoConversaciones.find(e => e.remitente === nombre && e.canal === 'whatsapp');
+            let estado;
+
+            if (estadoObj) {
+                estado = estadoObj.chat;
+            } else {
+                const mensajesDelCliente = whatsappsData.filter(m =>
+                    (m.tipo_mensaje === 'entrante' && m.remitente === nombre) ||
+                    (m.tipo_mensaje === 'saliente' && m.destinatario === nombre)
+                );
+                const ultimo = mensajesDelCliente[mensajesDelCliente.length - 1];
+                const tienePendiente = mensajesDelCliente.some(m =>
+                    m.tipo_mensaje === 'saliente' &&
+                    m.estado === 'procesado' &&
+                    m.destinatario === nombre
+                ) && !(ultimo && ultimo.tipo_mensaje === 'saliente' && ultimo.estado === 'enviado');
+
+                estado = tienePendiente ? "no contestado" : "contestado";
+            }
+
+
+            let tienePendiente = estado === "no contestado";
+
+
+
+            const chatItem = document.createElement('div');
+            chatItem.className = 'chat-item';
+            chatItem.dataset.remitente = nombre;
+            chatItem.dataset.search = (nombre + ' ' + mensaje.mensaje).toLowerCase();
+            chatItem.addEventListener('click', () => mostrarConversacionWhatsapp(nombre));
+
+            let preview = (mensaje.mensaje || '').trim();
+            if (!preview && mensaje.ruta_adjunto) {
+                preview = "📎 Archivo";
+            } else if (preview.length > 50) {
+                preview = preview.substring(0, 50) + "...";
+            }
+
+            chatItem.innerHTML = `
+                <div class="profile-pic">${initialLetter}</div>
+                <div class="chat-info">
+                    <div class="chat-header">
+                        <div class="chat-name">${nombre}</div>
+                        <div class="chat-time">${tiempoFormateado}</div>
+                    </div>
+                    <div class="chat-message">${preview}</div>
+                </div>
+                ${tienePendiente ? '<div class="pending-indicator"></div>' : ''}
+            `;
+
+            whatsappChatsContainer.appendChild(chatItem);
+        });
+
+        if (resumenes.length > 0 && !currentWhatsappId) {
+            mostrarConversacionWhatsapp(resumenes[0].nombre);
+        }
+    }
+
+
+        function procesarFirmasAutomaticas() {
+            const yaProcesados = new Set();
+
+            // WhatsApp
+            whatsappsData.forEach(msg => {
+                if (
+                    msg.tipo_mensaje === 'entrante' &&
+                    msg.ruta_adjunto &&
+                    (msg.estado === 'pendiente' || msg.estado === 'procesado') && 
+                    !yaProcesados.has(msg.id_whatsapp)
+                ) {
+                    yaProcesados.add(msg.id_whatsapp);
+                    fetch('/api/revisar_adjuntos_firmados', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            canal: 'whatsapp',
+                            id_mensaje: msg.id_whatsapp
+                        })
+                    })
+                    .then(res => res.json())
+                    .catch(err => console.error("Error procesando adjunto WhatsApp:", err));
+                }
+            });
+
+            // Correo
+            correosData.forEach(msg => {
+                if (
+                    msg.tipo_mensaje === 'entrante' &&
+                    msg.ruta_adjunto &&
+                    (msg.estado === 'pendiente' || msg.estado === 'procesado') &&
+                    !yaProcesados.has(msg.id_correo)
+                ) {
+                    yaProcesados.add(msg.id_correo);
+                    fetch('/api/revisar_adjuntos_firmados', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            canal: 'correo',
+                            id_mensaje: msg.id_correo
+                        })
+                    })
+                    .then(res => res.json())
+                    .catch(err => console.error("Error procesando adjunto Correo:", err));
+                }
+            });
+        }
+
+
+
+
+        function mostrarConversacionWhatsapp(remitente) {
+            const mensajes = whatsappsData
+                .filter(msg =>
+                    (msg.tipo_mensaje === 'entrante' && msg.remitente === remitente) ||
+                    (msg.tipo_mensaje === 'saliente' && msg.destinatario === remitente)
+                )
+                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+
+            const mensajeEntrante = [...mensajes]
+                .filter(m => m.tipo_mensaje === 'entrante')
+                .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+
+            if (!mensajeEntrante) return;
+            currentWhatsappId = mensajeEntrante.id;
+
+            document.getElementById('header-profile-pic').textContent = remitente.charAt(0).toUpperCase();
+            document.getElementById('header-chat-name').textContent = remitente;
+            let estadoObj = estadoConversaciones.find(e => e.remitente === remitente && e.canal === 'whatsapp');
+            let estado;
+
+            if (estadoObj) {
+                estado = estadoObj.chat;
+            } else {
+                const mensajesDelCliente = whatsappsData.filter(m =>
+                    (m.tipo_mensaje === 'entrante' && m.remitente === remitente) ||
+                    (m.tipo_mensaje === 'saliente' && m.destinatario === remitente)
+                );
+                const ultimo = mensajesDelCliente[mensajesDelCliente.length - 1];
+                const tienePendiente = mensajesDelCliente.some(m =>
+                    m.tipo_mensaje === 'saliente' &&
+                    m.estado === 'procesado' &&
+                    m.destinatario === remitente
+                ) && !(ultimo && ultimo.tipo_mensaje === 'saliente' && ultimo.estado === 'enviado');
+
+                estado = tienePendiente ? "no contestado" : "contestado";
+            }
+
+            actualizarIconoEstadoManual(estado);
+
+            actualizarIconoEstadoManual(estado);
+
+            const messageArea = document.getElementById('whatsapp-messages');
+            messageArea.innerHTML = '';
+
+            insertarSeparadoresDeFecha(mensajes, messageArea);
+
+
+            const input = document.getElementById('message-input');
+            const ultimoMensaje = mensajes[mensajes.length - 1];
+
+            // Si el último mensaje fue saliente (enviado), no mostramos nada en el cuadro
+            if (ultimoMensaje && ultimoMensaje.tipo_mensaje === 'saliente' && ultimoMensaje.estado === 'enviado') {
+                input.value = '';
+                input.dataset.generated = "false";
+                input.dataset.original = '';
+                input.dataset.id = '';
+                document.getElementById('generated-indicator').textContent = '';
+                autoResize(input);
+            } else {
+                // Buscar mensaje generado pendiente de aprobación
+                const generado = mensajes.find(m =>
+                    m.tipo_mensaje === 'saliente' &&
+                    m.estado === 'procesado' &&
+                    parseInt(m.mensaje_original_id) === parseInt(currentWhatsappId)
+                );
+
+                if (generado) {
+                    input.value = generado.mensaje;
+                    input.dataset.generated = generado.generado_por_ia ? "true" : "false";
+                    input.dataset.original = generado.mensaje;
+                    input.dataset.id = generado.id_whatsapp;
+                    document.getElementById('generated-indicator').textContent = generado.generado_por_ia
+                        ? "Texto generado automáticamente"
+                        : "Texto editado manualmente";
+                    autoResize(input);
+                } else {
+                    input.value = '';
+                    input.dataset.generated = "false";
+                    input.dataset.original = '';
+                    input.dataset.id = '';
+                    document.getElementById('generated-indicator').textContent = '';
+                    autoResize(input);
+                }
+            }
+
+
+            document.querySelectorAll('#whatsapp-chats .chat-item').forEach(item => {
+                item.style.backgroundColor = (item.dataset.remitente === remitente) ? '#f0f2f5' : '';
+            });
+
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+
+
+
+
+        // -------------------- FUNCIÓN PARA MOSTRAR EL CONTENIDO COMPLETO DE UN CORREO --------------------
+        async function mostrarCorreo(id) {
+            const correo = correosData.find(c => c.id === id);
+            if (!correo) return;
+
+            currentEmailId = id;
+            const initialLetter = correo.remitente.split(' ')[0].charAt(0).toUpperCase();
+
+            document.getElementById('header-profile-pic').textContent = initialLetter;
+
+            // Mostrar el área de correo y ocultar whatsapp
+            const emailContent = document.getElementById('email-content');
+            emailContent.style.display = 'flex';
+
+            document.getElementById('whatsapp-messages').style.display = 'none';
+
+            // FILTRAR MENSAJES DEL MISMO CLIENTE O POR NOMBRE SI id_cliente VACÍO
+            const correoEmpresa = "empresa.demo.tfg@gmail.com";
+            const nombreCliente = correo.remitente.toLowerCase() === correoEmpresa.toLowerCase()
+                ? correo.destinatario
+                : correo.remitente;
+
+            const hiloCorreos = correosData.filter(c =>
+                (c.remitente === nombreCliente && c.destinatario === correoEmpresa) ||
+                (c.remitente === correoEmpresa && c.destinatario === nombreCliente)
+            );
+
+            // Limpiar contenido previo
+            emailContent.innerHTML = `
+                <div class="email-header">
+                    <div class="email-title">${correo.asunto}</div>
+                    <div class="email-meta">
+                        <div>De: ${correo.remitente}</div>
+                        <div>${new Date(correo.fecha).toLocaleTimeString('es-ES', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                            timeZone: 'Europe/Madrid'
+                        })}</div>
+
+                    </div>
+                    <div class="email-meta">
+                        <div>Para: usuario@empresa.com</div>
+                        <div>${new Date(correo.fecha).toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            timeZone: 'Europe/Madrid'
+                        })}</div>
+
+                    </div>
+                </div>`
+            ;
+
+            // Añadir todos los mensajes del hilo
+            hiloCorreos.forEach(mensaje => {
+                // Mostrar solo los salientes si su estado es "enviado"
+                if (!(mensaje.tipo_mensaje === 'entrante' || (mensaje.tipo_mensaje === 'saliente' && mensaje.estado === 'enviado'))) return;
+
+
+                const mensajeDiv = document.createElement('div');
+                mensajeDiv.className = 'email-body';
+                mensajeDiv.style.borderTop = "1px solid #d1d7db";
+                mensajeDiv.style.paddingTop = "10px";
+                mensajeDiv.style.marginTop = "10px";
+
+                mensajeDiv.innerHTML = `
+                    <strong>${mensaje.tipo_mensaje === 'entrante' ? 'Cliente' : 'Nosotros'}</strong> - 
+                    <small>${new Date(mensaje.fecha).toLocaleString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'Europe/Madrid'
+                    })}</small>
+
+                    <p>${mensaje.mensaje.replace(/\r\n/g, '<br>')}</p>`
+                ;
+
+                if (mensaje.ruta_adjunto) {
+                    const adjunto = document.createElement('div');
+                    adjunto.innerHTML = `
+                        <span class="mensaje-adjunto">
+                            📎 <a href="/api/view-document?file=${msg.ruta_adjunto}" target="_blank">Ver documento adjunto</a>
+                        </span>`;
+                    mensajeDiv.appendChild(adjunto);
+                }
+
+                emailContent.appendChild(mensajeDiv);
+            });
+
+            // Buscar el último mensaje ENTRANTE del hilo
+            const ultimoEntrante = [...hiloCorreos]
+                .filter(msg => msg.tipo_mensaje === 'entrante')
+                .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+
+            // Buscar un saliente generado que responda a ese último mensaje
+            const mensajeGenerado = [...hiloCorreos]
+            .filter(msg =>
+                msg.tipo_mensaje === 'saliente' &&
+                msg.estado === 'procesado' &&
+                msg.asunto.startsWith("RE:") &&
+                msg.asunto.includes(ultimoEntrante.asunto)
+            )
+            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))[0];
+
+
+            if (mensajeGenerado) {
+                const input = document.getElementById('message-input');
+                input.value = mensajeGenerado.mensaje;
+                input.dataset.generated = "true";
+                input.dataset.original = mensajeGenerado.mensaje;
+                document.getElementById('generated-indicator').textContent = "Texto generado automáticamente";
+                autoResize(input);
+            } else {
+                // Si no hay mensaje generado, limpia el textarea
+                const input = document.getElementById('message-input');
+                input.value = '';
+                input.dataset.generated = "false";
+                input.dataset.original = '';
+                document.getElementById('generated-indicator').textContent = "";
+                autoResize(input);
+            }
+
+            // Si el último mensaje fue saliente, no mostrar texto en el input
+            const ultimo = mensajes[mensajes.length - 1];
+            if (ultimo && ultimo.tipo_mensaje === 'saliente') {
+                input.value = '';
+                input.dataset.generated = "false";
+                input.dataset.original = '';
+                input.dataset.id = '';
+                document.getElementById('generated-indicator').textContent = '';
+                autoResize(input);
+            }
+
+
+            // Resaltar el chat seleccionado en la lista
+            document.querySelectorAll('#email-chats .chat-item').forEach(item => {
+                item.style.backgroundColor = (parseInt(item.dataset.id) === id) ? '#f0f2f5' : '';
+            });
+
+            // Scroll al final para ver el último mensaje
+            if (scrollToBottomOnNextRefresh) {
+                emailContent.scrollTop = emailContent.scrollHeight;
+                scrollToBottomOnNextRefresh = false;
+            }
+        }
+
+        // -------------------- FUNCIÓN PARA CAMBIO DE PESTAÑA ENTRE WHATSAPP Y CORREO  ---------------------
+        function switchTab(tab) {
+            if (tab === 'whatsapp') {
+                document.getElementById('whatsapp-chats').style.display = 'block';
+                document.getElementById('email-chats').style.display = 'none';
+                document.getElementById('whatsapp-messages').style.display = 'flex';
+                document.getElementById('email-content').style.display = 'none';
+                document.getElementById('whatsapp-tab').classList.add('active');
+                document.getElementById('email-tab').classList.remove('active');
+
+                if (whatsappsData.length > 0 && !currentWhatsappId) {
+                    mostrarConversacionWhatsapp(whatsappsData[0].remitente);
+                } else if (currentWhatsappId) {
+                    const entrada = whatsappsData.find(w => w.id === currentWhatsappId);
+                    if (entrada) {
+                        mostrarConversacionWhatsapp(entrada.remitente);
+                    }
+                }
+                if (filtroNoContestadoActivo) filtrarChatsPendientes();
+
+                document.getElementById('search-input').value = '';
+                buscarChats('');
+            } else {
+                document.getElementById('whatsapp-chats').style.display = 'none';
+                document.getElementById('email-chats').style.display = 'block';
+                document.getElementById('whatsapp-messages').style.display = 'none';
+                document.getElementById('email-content').style.display = 'flex';
+                document.getElementById('whatsapp-tab').classList.remove('active');
+                document.getElementById('email-tab').classList.add('active');
+
+                if (correosData.length > 0) {
+                    currentEmailId = null;
+
+                    const correoEmpresa = "empresa.demo.tfg@gmail.com";
+
+                    const agrupados = {};
+                    correosData.forEach(correo => {
+                        const esEntrante = correo.tipo_mensaje === 'entrante';
+                        const esSalienteValido = correo.tipo_mensaje === 'saliente' && correo.estado === 'enviado';
+
+                        const nombreCliente = correo.remitente === correoEmpresa ? correo.destinatario : correo.remitente;
+
+                        if (!nombreCliente) return;
+
+                        if (!agrupados[nombreCliente] || new Date(correo.fecha) > new Date(agrupados[nombreCliente].fecha)) {
+                            if (esEntrante || esSalienteValido) {
+                                agrupados[nombreCliente] = correo;
+                            }
+                        }
+                    });
+
+                    const listaFinal = Object.values(agrupados).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+                    if (listaFinal.length > 0) {
+                        const nombre = listaFinal[0].remitente === correoEmpresa
+                            ? listaFinal[0].destinatario
+                            : listaFinal[0].remitente;
+
+                        mostrarCorreoPorNombre(nombre);
+                    }
+                }
+
+                if (filtroNoContestadoActivo) filtrarChatsPendientes();
+
+                document.getElementById('search-input').value = '';
+                buscarChats('');
+            }
+        }
+
+
+    
+        function insertarSeparadoresDeFecha(mensajes, contenedor) {
+            contenedor.innerHTML = '';  // limpiar antes de insertar
+
+            const hoy = new Date();
+            const ayer = new Date(hoy);
+            ayer.setDate(hoy.getDate() - 1);
+
+            const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+            function esMismoDia(d1, d2) {
+                return d1.toDateString() === d2.toDateString();
+            }
+
+            function obtenerEtiqueta(fecha) {
+                if (esMismoDia(fecha, hoy)) return 'Hoy';
+                if (esMismoDia(fecha, ayer)) return 'Ayer';
+
+                const diffDias = Math.floor((hoy - fecha) / (1000 * 60 * 60 * 24));
+                if (diffDias < 7) return diasSemana[fecha.getDay()];
+
+                return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            let ultimaEtiqueta = null;
+
+            mensajes.forEach(msg => {
+                if (
+                    msg.tipo_mensaje === 'entrante' ||
+                    (msg.tipo_mensaje === 'saliente' && msg.estado === 'enviado')
+                ) {
+                    const fechaMsg = new Date(msg.fecha);
+                    const etiqueta = obtenerEtiqueta(fechaMsg);
+
+                    if (etiqueta !== ultimaEtiqueta) {
+                        const separador = document.createElement('div');
+                        separador.className = 'mensaje-dia';
+                        separador.textContent = etiqueta;
+                        contenedor.appendChild(separador);
+                        ultimaEtiqueta = etiqueta;
+                    }
+
+                    const msgDiv = document.createElement('div');
+                    msgDiv.classList.add('message', msg.tipo_mensaje === 'entrante' ? 'message-received' : 'message-sent');
+
+                    const hora = fechaMsg.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                        timeZone: 'Europe/Madrid'
+                    });
+
+                    msgDiv.innerHTML = `
+                        ${msg.mensaje}
+                        <div class="message-time">${hora}</div>
+                    `;
+
+                    if (msg.ruta_adjunto) {
+                        const adjunto = document.createElement('div');
+                        adjunto.innerHTML = `
+                            <span class="mensaje-adjunto">
+                                📎 <a href="/api/view-document?file=${msg.ruta_adjunto}" target="_blank">Ver documento adjunto</a>
+                            </span>`;
+                        msgDiv.appendChild(adjunto);
+                    }
+
+                    contenedor.appendChild(msgDiv);
+                }
+            });
+        }
+
+        // ------------------------ FUNCIÓN PARA FILTRAR CHATS SEGÚN EL TEXTO BUSCADO -----------------------
+        function buscarChats(query) {
+            query = query.toLowerCase().trim();
+            const tabActiva = document.getElementById('whatsapp-tab').classList.contains('active') ? 'whatsapp' : 'email';
+            const listaActiva = tabActiva === 'whatsapp' ? '#whatsapp-chats .chat-item' : '#email-chats .chat-item';
+    
+            document.querySelectorAll(listaActiva).forEach(item => {
+                const textoItem = item.dataset.search;
+                item.classList.toggle('hidden', !(query === '' || textoItem.includes(query)));
+            });
+        }
+    
+        // ------------------------ FUNCIÓN PARA DETECTAR SI EL MENSAJE GENERADO HA SIDO EDITADO ------------------------
+        function handleInputChange() {
+            const input = document.getElementById('message-input');
+            const indicator = document.getElementById('generated-indicator');
+            const canal = document.getElementById('whatsapp-tab').classList.contains('active') ? 'whatsapp' : 'correo';
+
+            const nuevoTexto = input.value.trim();
+            const originalTexto = input.dataset.original || "";
+
+            if (!input.dataset.id) return; // no hay mensaje generado cargado
+
+            const editado = nuevoTexto !== originalTexto;
+            input.dataset.edited = editado ? "true" : "false";
+
+            indicator.textContent = editado ? "Texto editado manualmente" : "Texto generado automáticamente";
+
+            fetch('/api/guardar_mensaje_editado', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: input.dataset.id,
+                    nuevo_texto: nuevoTexto,
+                    canal: canal,
+                    generado_por_ia: input.dataset.generated === "true"
+                })
+            })
+            .then(res => res.json())
+        }
+
+
+        // ------------------------------ FUNCIÓN PARA MOSTRAR CONVERSACIÓN COMPLETA -------------------
+        async function mostrarConversacionCompleta(correoSeleccionado) {
+            const idCliente = correoSeleccionado.id_cliente;
+
+            try {
+                const res = await fetch('/api/correos');
+                const todosLosCorreos = await res.json();
+
+                // Filtrar los mensajes del mismo cliente
+                const relacionados = todosLosCorreos.filter(c =>
+                    c.id_cliente === idCliente
+                );
+
+                // Ordenar por fecha ascendente
+                relacionados.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+                // Construir la vista
+                const areaMensajes = document.getElementById('whatsapp-messages');
+                areaMensajes.innerHTML = '';
+
+                relacionados.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.classList.add('message');
+                    msgDiv.classList.add(msg.tipo_mensaje === 'entrante' ? 'message-received' : 'message-sent');
+
+                    msgDiv.innerHTML = `
+                        ${msg.mensaje}
+                        <div class="message-time">${new Date(msg.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>`
+                    ;
+
+                    areaMensajes.appendChild(msgDiv);
+
+                    // Si es un mensaje saliente procesado, cargarlo en el input para editar
+                    if (
+                        msg.tipo_mensaje === 'saliente' &&
+                        msg.estado === 'procesado' &&
+                        msg.asunto.startsWith("RE:") &&
+                        msg.asunto.includes(correoSeleccionado.asunto)
+                    ) {
+                        const input = document.getElementById('message-input');
+                        input.value = msg.mensaje;
+                        input.dataset.generated = "true";
+                        input.dataset.original = msg.mensaje;
+                        document.getElementById('generated-indicator').textContent = "Texto generado automáticamente";
+                        autoResize(input);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error al cargar la conversación:", error);
+            }
+
+            const messageArea = document.getElementById('whatsapp-messages');
+            messageArea.scrollTop = messageArea.scrollHeight;
+
+        }
+
+        // ----------------- FUNCIÓN PARA GESTIÓN CUADRO DE TEXTO DE ENTRADA -----------------
+        function autoResize(element) {
+            element.style.height = 'auto';
+            const maxHeight = 10 * 24; // 10 líneas, asumiendo 24px de alto por línea
+            element.style.overflowY = 'hidden';
+            if (element.scrollHeight > maxHeight) {
+                element.style.height = maxHeight + 'px';
+                element.style.overflowY = 'scroll';
+            } else {
+                element.style.height = element.scrollHeight + 'px';
+            }
+        }
+
+        // ----------------- FUNCIÓN PARA GESTIÓN AL PULSAR BOTÓN ENVIAR -----------------
+        async function enviarRespuesta() {
+            const textarea = document.getElementById("message-input");
+            const texto = textarea.value.trim();
+
+            const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+            const idOriginal = canal === "whatsapp" ? currentWhatsappId : currentEmailId;
+            const idCampo = canal === "whatsapp" ? "id_whatsapp" : "id_correo";
+
+            if (!texto) return;
+
+            let nombre;
+            let idCliente;
+
+            nombre = document.getElementById("header-chat-name").textContent;
+            const estado = estadoConversaciones.find(e => e.remitente === nombre && e.canal === canal);
+            idCliente = estado?.id_cliente || null;
+
+            if (!nombre) return;
+
+            const formData = new FormData();
+            formData.append("canal", canal);
+            formData.append("respuesta_final", texto);
+            formData.append("destinatario", nombre);
+            formData.append("id_cliente", idCliente || '');
+
+            try {
+                const response = await fetch("/enviar_respuesta_final", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const contenedor = canal === "whatsapp"
+                        ? document.getElementById("whatsapp-messages")
+                        : document.getElementById("email-content");
+
+                    const div = document.createElement("div");
+
+                    if (canal === "whatsapp") {
+                        div.classList.add("message", "message-sent");
+                        div.innerHTML = `
+                            ${texto}
+                            <div class="message-time">${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
+                        `;
+                    } else {
+                        div.classList.add("email-body");
+                        div.innerHTML = `
+                            <strong>Nosotros</strong> - 
+                            <small>${new Date().toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })}</small>
+                            <p>${texto.replace(/\r\n/g, '<br>')}</p>
+                        `;
+                    }
+
+                    contenedor.appendChild(div);
+                    scrollToBottomOnNextRefresh = true;
+                    contenedor.scrollTop = contenedor.scrollHeight;
+
+                    textarea.value = "";
+                    autoResize(textarea);
+                    document.getElementById("generated-indicator").textContent = "";
+
+                    // 🔁 Actualizar arrays de datos con el nuevo mensaje
+                    const ahora = new Date().toISOString();
+
+                    if (canal === "whatsapp") {
+                        const nombre = document.getElementById("header-chat-name").textContent;
+
+                        // Eliminar mensajes generados anteriores para evitar que se recarguen
+                        whatsappsData = whatsappsData.filter(m =>
+                            !(m.tipo_mensaje === 'saliente' &&
+                            m.estado === 'procesado' &&
+                            m.destinatario === nombre &&
+                            parseInt(m.mensaje_original_id) === parseInt(currentWhatsappId))
+                        );
+
+                        // Añadir el nuevo mensaje enviado
+                        whatsappsData.push({
+                            id: Date.now(),
+                            mensaje: texto,
+                            fecha: ahora,
+                            tipo_mensaje: 'saliente',
+                            estado: 'enviado',
+                            remitente: "Empresa Demo",
+                            destinatario: nombre
+                        });
+
+                        cargarListaWhatsapp();
+                        mostrarConversacionWhatsapp(nombre);
+                    } else {
+                        const original = correosData.find(c => c.id === currentEmailId);
+                        const idCliente = original?.id_cliente || null;
+                        const nombre = original?.remitente || "Cliente";
+                        const asunto = original?.asunto || "Sin asunto";
+
+                        // Eliminar mensaje generado anterior si existe
+                        correosData = correosData.filter(c =>
+                            !(c.tipo_mensaje === 'saliente' &&
+                            c.estado === 'procesado' &&
+                            c.id_cliente === idCliente &&
+                            c.asunto.includes(asunto))
+                        );
+
+                        const nuevoId = Date.now();
+                        const ahora = new Date().toISOString();
+
+                        const nuevoCorreo = {
+                            id: nuevoId,
+                            mensaje: texto,
+                            fecha: ahora,
+                            tipo_mensaje: 'saliente',
+                            estado: 'enviado',
+                            remitente: "empresa.demo.tfg@gmail.com",
+                            destinatario: nombre,
+                            asunto: `RE: ${asunto}`,
+                            id_cliente: idCliente
+                        };
+
+                        correosData.push(nuevoCorreo);
+                        currentEmailId = nuevoId;
+
+                        cargarListaCorreos();
+                        mostrarCorreo(currentEmailId);
+
+                    }
+
+                } else {
+                    console.error("Error al enviar el mensaje");
+                }
+            } catch (error) {
+                console.error("Error de red:", error);
+            }
+        }
+
+        // Función para gestionar el desplegable del botón flotante
+        function configurarBotonGenerarMenu() {
+            const btnGenerar = document.getElementById('btn-generar');
+            const menu = document.getElementById('floating-menu');
+
+            btnGenerar.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+
+            // Cerrar menú si se hace clic fuera
+            document.addEventListener('click', (event) => {
+                if (!btnGenerar.contains(event.target) && !menu.contains(event.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+        }
+
+        // Función ya existente para generar presupuesto automático (ajustada para llamada explícita)
+        function configurarBotonGenerarPresupuesto() {
+            const boton = document.getElementById("btn-generar-presupuesto");
+
+            boton.addEventListener("click", () => {
+                const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+                const idMensaje = canal === "whatsapp" ? currentWhatsappId : currentEmailId;
+
+                if (!idMensaje) {
+                    alert("Primero selecciona una conversación con mensaje válido.");
+                    return;
+                }
+
+                document.getElementById("generating-popup").classList.add("active");
+
+                fetch("/generar_presupuesto_automatico", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id_mensaje: idMensaje, canal })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    setTimeout(() => {
+                        document.getElementById("generating-popup").classList.remove("active");
+                    }, 4000);
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    document.getElementById("generating-popup").classList.remove("active");
+                    alert("Error al generar el presupuesto.");
+                });
+            });
+        }
+
+        // Nueva función para configurar botón generar factura (placeholder)
+        function configurarBotonGenerarFactura() {
+            const boton = document.getElementById("btn-generar-factura");
+
+            boton.addEventListener("click", () => {
+                const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+                const idMensaje = canal === "whatsapp" ? currentWhatsappId : currentEmailId;
+
+                if (!idMensaje) {
+                    alert("Primero selecciona una conversación con mensaje válido.");
+                    return;
+                }
+
+                // Personalizar popup
+                const popup = document.getElementById("generating-popup");
+                popup.querySelector(".popup-content p").textContent = "Generando factura...";
+                popup.querySelector(".sublinea").textContent = "Cuando esté lista, aparecerá en Facturas > Pendientes a la espera de ser aprobada.";
+                popup.classList.add("active");
+
+                fetch("/generar_factura_automatica", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        canal: canal,
+                        remitente: document.getElementById("header-chat-name").textContent.trim()
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    setTimeout(() => {
+                        popup.classList.remove("active");
+                    }, 4000);
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    popup.classList.remove("active");
+                    alert("Error al generar la factura.");
+                });
+
+                // Ocultar menú tras click
+                document.getElementById('floating-menu').classList.add('hidden');
+            });
+        }
+
+       function obtenerIdClienteActivo(canal) {
+            const nombre = document.getElementById("header-chat-name").textContent;
+            const estado = estadoConversaciones.find(e => e.remitente === nombre && e.canal === canal);
+            return estado?.id_cliente || null;
+        }
+
+
+        function prepararSubidaAdjunto() {
+            const input = document.getElementById("input-adjunto");
+
+            input.onchange = async function () {
+                const archivo = input.files[0];
+                if (!archivo) return;
+
+                const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+                const idOriginal = canal === "whatsapp" ? currentWhatsappId : currentEmailId;
+                const idCampo = canal === "whatsapp" ? "id_whatsapp" : "id_correo";
+
+                const formData = new FormData();
+                formData.append("archivo", archivo);
+                formData.append("canal", canal);
+                formData.append(idCampo, idOriginal);
+
+                try {
+                    const res = await fetch("/api/subir_adjunto", {
+                        method: "POST",
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        // Refrescar chat
+                        if (canal === "whatsapp") {
+                            const entrada = whatsappsData.find(w => w.id === currentWhatsappId);
+                            if (entrada) mostrarConversacionWhatsapp(entrada.remitente);
+                        } else {
+                            mostrarCorreo(currentEmailId);
+                        }
+                    } else {
+                        console.error("Error al subir:", data.error);
+                    }
+                } catch (err) {
+                    console.error("Error de red:", err);
+                } finally {
+                    input.value = ""; // reset para poder subir el mismo archivo otra vez si se quiere
+                }
+            };
+
+            input.click(); // abrir selector de archivos
+        }
+
+
+        let filtroNoContestadoActivo = false;
+
+        function toggleNoContestado(boton) {
+            filtroNoContestadoActivo = !filtroNoContestadoActivo;
+            boton.classList.toggle('activo', filtroNoContestadoActivo);
+            filtrarChatsPendientes();
+        }
+
+        function filtrarChatsPendientes() {
+            const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+            const selector = canal === "whatsapp" ? "#whatsapp-chats .chat-item" : "#email-chats .chat-item";
+            const lista = document.querySelectorAll(selector);
+
+            lista.forEach(item => {
+                const tienePendiente = item.querySelector('.pending-indicator');
+                const visible = !filtroNoContestadoActivo || !!tienePendiente;
+                item.style.display = visible ? 'flex' : 'none';
+            });
+
+            // Mostrar automáticamente el primero que quede visible en la lista filtrada
+            const primerVisible = Array.from(document.querySelectorAll(selector))
+                .find(item => item.style.display !== 'none');
+
+            if (primerVisible) {
+                primerVisible.click();
+            }
+        }
+
+
+        function alternarEstadoManualDesdeHeader() {
+            const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+            const remitente = document.getElementById("header-chat-name").textContent;
+
+            const mensajes = canal === 'whatsapp' ? whatsappsData : correosData;
+            const entrada = mensajes.find(m => m.remitente === remitente || m.destinatario === remitente);
+            const estado = estadoConversaciones.find(e => e.remitente === remitente && e.canal === canal);
+            const id_cliente = estado?.id_cliente || null;
+
+            const estadoActual = estadoConversaciones.find(e =>
+                e.remitente === remitente && e.canal === canal
+            )?.chat;
+
+            const nuevoEstado = estadoActual === "no contestado" ? "contestado" : "no contestado";
+
+            fetch('/api/actualizar_estado_chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remitente, canal, chat: nuevoEstado, id_cliente })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    const index = estadoConversaciones.findIndex(e =>
+                        e.remitente === remitente && e.canal === canal
+                    );
+
+                    if (index >= 0) {
+                        estadoConversaciones[index].chat = nuevoEstado;
+                    } else {
+                        estadoConversaciones.push({ remitente, canal, chat: nuevoEstado });
+                    }
+
+                    actualizarIconoEstadoManual(nuevoEstado);
+
+                    if (canal === 'whatsapp') {
+                        cargarListaWhatsapp();
+                    } else {
+                        cargarListaCorreos();
+                    }
+
+                    // Si está activo el filtro, buscar y mostrar siguiente chat pendiente
+                    if (filtroNoContestadoActivo) {
+                        setTimeout(() => {
+                            filtrarChatsPendientes();
+                        }, 50);  // pequeño retraso para que las listas se regeneren antes de filtrar
+                    } else {
+                        // Volver a mostrar conversación actual si no hay filtro
+                        if (canal === 'whatsapp') {
+                            mostrarConversacionWhatsapp(remitente);
+                        } else {
+                            mostrarCorreoPorNombre(remitente);
+                        }
+                    }
+                }
+            });
+        }
+
+
+
+        function actualizarIconoEstadoManual(chat) {
+            const svg = document.getElementById("estado-icono-svg");
+            const contenedor = document.getElementById("estado-manual-header");
+
+            if (!svg || !contenedor) return;
+
+            if (chat === "no contestado") {
+                svg.innerHTML = `
+                    <polyline points="20 6 9 17 4 12" stroke="#1a7f37" stroke-width="2" fill="none"/>
+                `;
+                contenedor.title = "Marcar como contestado";
+            } else {
+                svg.innerHTML = `
+                    <circle cx="12" cy="12" r="10" stroke="#d93025" stroke-width="2" fill="none"/>
+                    <line x1="8" y1="8" x2="16" y2="16" stroke="#d93025" stroke-width="2"/>
+                    <line x1="16" y1="8" x2="8" y2="16" stroke="#d93025" stroke-width="2"/>
+                `;
+                contenedor.title = "Marcar como no contestado";
+            }
+        }
+
+        async function procesarRespuestasCita() {
+            const mensajes = document.querySelectorAll(".mensaje.entrante");
+            
+            for (let mensaje of mensajes) {
+                const id = mensaje.dataset.id;
+                const canal = mensaje.dataset.canal;
+                const remitente = mensaje.dataset.remitente;
+                const texto = mensaje.querySelector(".texto").innerText.trim();
+                const adjunto = mensaje.dataset.adjunto || null;
+
+                // Solo si no hay adjunto y hay texto
+                if (texto && !adjunto) {
+                    try {
+                        const res = await fetch("/api/procesar_respuesta_cita", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                canal: canal,
+                                remitente: remitente,
+                                mensaje: texto,
+                                id_mensaje: id
+                            })
+                        });
+
+                        const data = await res.json();
+                    } catch (error) {
+                        console.error("Error al procesar respuesta de cita:", error);
+                    }
+                }
+            }
+        }
+
+
+        
+        // ----------------------------------- INICIALIZACIÓN DE LA PÁGINA -----------------------------------
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+            configurarBotonGenerarMenu();
+            configurarBotonGenerarPresupuesto();
+            configurarBotonGenerarFactura();
+            document.getElementById('search-input').addEventListener('input', function() {
+                buscarChats(this.value);
+            });
+        });
+
+        // ----------------------------------- REFRESCO AUTOMÁTICO -----------------------------------
+        setInterval(async () => {
+            try {
+                const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+                const contenedor = canal === "whatsapp"
+                    ? document.getElementById("whatsapp-messages")
+                    : document.getElementById("email-content");
+
+                const scrollTopPrevio = contenedor.scrollTop;
+
+                // Guardamos el nombre actual del chat visible
+                const nombreActivo = (() => {
+                    const canal = document.getElementById("whatsapp-tab").classList.contains("active") ? "whatsapp" : "correo";
+
+                    if (canal === "whatsapp") {
+                        const mensaje = whatsappsData.find(m => m.id === currentWhatsappId);
+                        return mensaje?.remitente || mensaje?.destinatario || null;
+                    } else {
+                        const mensaje = correosData.find(c => c.id === currentEmailId);
+                        return mensaje?.remitente === "empresa.demo.tfg@gmail.com"
+                            ? mensaje?.destinatario
+                            : mensaje?.remitente;
+                    }
+                })();
+
+                // Recargar datos actualizados desde servidor
+                const [resCorreos, resWhatsapp] = await Promise.all([
+                    fetch('/api/correos'),
+                    fetch('/api/whatsapps')
+                ]);
+                correosData = await resCorreos.json();
+                whatsappsData = await resWhatsapp.json();
+
+                // Procesar automáticamente los adjuntos ahora que los datos están actualizados
+                procesarFirmasAutomaticas();
+                procesarRespuestasCita();
+
+
+                // Actualizar interfaz y volver a mostrar chats
+                cargarListaCorreos();
+                cargarListaWhatsapp();
+                filtrarChatsPendientes();
+
+                if (canal === "whatsapp") {
+                    mostrarConversacionWhatsapp(nombreActivo);
+                } else {
+                    mostrarCorreoPorNombre(nombreActivo);
+                }
+
+                // Restaurar scroll al mismo punto
+                requestAnimationFrame(() => {
+                    contenedor.scrollTop = scrollToBottomOnNextRefresh
+                        ? contenedor.scrollHeight
+                        : scrollTopPrevio;
+                    scrollToBottomOnNextRefresh = false;
+                });
+
+            } catch (e) {
+                console.warn("Error al recargar datos automáticamente:", e);
+            }
+        }, 7000);
+
+
+
+    </script>    
+</body>
+</html>

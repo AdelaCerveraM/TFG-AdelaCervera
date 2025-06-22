@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentacion</title>
+    
+    <!--  ESTILOS  -->
+    <link rel="stylesheet" href="estilos.css">                 <!-- Hoja de estilos externa para general y barra superior -->
+    <link rel="stylesheet" href="estilos_documentacion.css">   <!-- Hoja de estilos externa para la página en concreto -->
+</head>
+<body>
+    <!------------------------------ BARRA SUPERIOR DE NAVEGACIÓN ------------------------------>
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="calendario.html">Calendario</a></li>
+            <li><a href="chat.html">Chat</a></li>
+            <li><a href="documentacion.html" class="active">Documentacion</a></li>
+            <li><a href="citas.html">Citas</a></li>
+        </ul>
+    </nav>
+
+    <!-------------------------- LAYOUT GENERAL CON SIDEBAR Y CONTENIDO -------------------------->
+    <div class="container">
+        
+        <!----------------------------- PANEL LATERAL DE CATEGORÍAS ----------------------------->
+        <aside class="sidebar">
+            <nav>
+                <ul class="nav-menu">
+                    <!-- 1. Categoría Presupuestos con subcategorías -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link category-link" data-category="presupuestos">Presupuestos</a>
+                        <ul class="submenu" id="presupuestos-submenu">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link subcategory-link" data-category="presupuestos" data-status="pendiente">Pendiente</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link subcategory-link" data-category="presupuestos" data-status="revisado">Revisado</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link subcategory-link" data-category="presupuestos" data-status="firmado">Firmado</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- 2. Categoría Facturas con subcategorías -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link category-link" data-category="facturas">Facturas</a>
+                        <ul class="submenu" id="facturas-submenu">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link subcategory-link" data-category="facturas" data-status="pendiente">Pendiente</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link subcategory-link" data-category="facturas" data-status="revisado">Revisado</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link subcategory-link" data-category="facturas" data-status="pagado">Pagado</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!--------------------------- ÁREA PRINCIPAL CON DOCUMENTOS --------------------------->
+        <main class="main-content">
+
+            <!-- Cabecera con título y buscador -->
+            <div class="header">
+                <h2 class="section-title">Documentos</h2>
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Buscar documentos...">
+                </div>
+            </div>
+
+            <!-- Contenedor para mensajes de error -->
+            <div id="error-container"></div>
+
+            <!-- Grid con tarjetas de documentos -->
+            <div class="documents-grid" id="documents-container">
+                <div class="empty-state">
+                    <p>Seleccione una categoría para visualizar documentos</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!---------------------------- PANEL FLOTANTE DE VISTA PREVIA ----------------------------->
+    <div class="preview-pane" id="preview-pane">
+        <button class="close-preview" id="close-preview">×</button>
+
+        <!-- 2. Ficha técnica del cliente -->
+        <div id="presupuesto-datos-cliente">
+            <!-- Se rellenará con JS -->
+        </div>
+
+        <div class="presupuesto-form" id="formulario-presupuesto">
+            <!-- 3. Subtítulo Presupuesto -->
+            <h3 class="titulo-bloque">GENERACIÓN PRESUPUESTO</h3>
+
+            <!-- 4. Formulario existente (sin cambios) -->
+            <label>Descripción del trabajo</label>
+            <textarea placeholder="Describe brevemente el trabajo..." rows="5"></textarea>
+
+            <label>Conceptos</label>
+            <div class="conceptos-container">
+                <div class="concepto-row">
+                    <div class="drag-handle" title="Arrastrar">☰</div>
+                    <textarea placeholder="Concepto" rows="1" class="input-concepto"></textarea>
+                    <input type="number" placeholder="Cantidad" min="0" step="1">
+                    <input type="number" placeholder="Precio unitario (€)" min="0" step="0.1">
+                    <button class="remove-row-btn" title="Eliminar fila">🗑</button>
+                </div>
+            </div>
+            <button class="add-row-btn">+ Añadir concepto</button>
+
+            <label id="etiqueta-condiciones">Condiciones</label>
+            <textarea placeholder="Una condición por línea..." rows="5"></textarea>
+
+            <button class="generate-btn">Generar presupuesto</button>
+        </div>
+
+        <!-- Vista previa del documento -->
+        <div class="document-preview">
+            <h3 class="titulo-bloque">DOCUMENTO FINAL</h3>
+            <div class="document-frame" id="document-frame">
+            </div>
+        </div>
+
+        <div id="bloque-aprobar">
+            <button class="approve-btn" onclick="aprobarPresupuesto()">Aprobar presupuesto</button>
+        </div>
+        
+    </div>
+
+    <!---------------------------------------- OVERLAY ---------------------------------------->
+    <div class="overlay" id="overlay"></div>
+
+    <div id="generating-popup" class="popup-generando">
+        <div class="popup-content">
+            <div class="spinner"></div>
+            <p id="popup-text"></p>
+        </div>
+    </div>
+
+    <!-- Popup de confirmación -->
+    <div id="popup-confirmacion" class="popup-generando">
+        <div class="popup-content">
+            <p id="texto-confirmacion">¿Estás seguro de que deseas aprobar este presupuesto?</p>
+            <div style="margin-top: 20px;">
+                <button id="btn-confirmar" class="approve-btn" style="width:auto; margin-right: 10px;">Sí, aprobar</button>
+                <button id="btn-cancelar" class="action-btn" style="width:auto;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!--******************************************************************************************************************************************************************************-->
+
+
+    <script>
+        // ---------------- VARIABLES GLOBALES Y REFERENCIAS A ELEMENTOS ----------------
+        const documentsContainer = document.getElementById('documents-container');
+        const previewPane = document.getElementById('preview-pane');
+        const overlay = document.getElementById('overlay');
+        const closePreviewBtn = document.getElementById('close-preview');
+        const clientInfoContainer = document.getElementById('client-info');
+        const documentFrame = document.getElementById('document-frame');
+        const categoryLinks = document.querySelectorAll('.category-link');
+        const subcategoryLinks = document.querySelectorAll('.subcategory-link');
+        const searchInput = document.getElementById('search-input');
+        const errorContainer = document.getElementById('error-container');
+        let esFactura = false;
+    
+        let currentDocuments = [];   // Lista con los documentos cargados actualmente
+
+
+        // ------------------------- EVENTOS: NAVEGACIÓN Y FILTRADO DE CONTENIDO -------------------------
+        categoryLinks.forEach(link => link.addEventListener('click', toggleSubmenu));
+        subcategoryLinks.forEach(link => link.addEventListener('click', loadDocuments));
+        closePreviewBtn.addEventListener('click', closePreview);
+        overlay.addEventListener('click', closePreview);
+        searchInput.addEventListener('input', filterDocuments);
+    
+
+        // ----------------- FUNCIÓN PARA MOSTRAR U OCULTAR UN SUBMENÚ SEGÚN LA CATEGORÍA -----------------
+        function toggleSubmenu(e) {
+            e.preventDefault();
+            const category = this.dataset.category;
+            const submenu = document.getElementById(`${category}-submenu`);
+            submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
+        }
+    
+
+        // ------------- FUNCIÓN PARA FORZAR VISUALIZACIÓN DE TODOS LOS SUBMENÚS (POR DEFECTO) --------------
+        function showAllSubmenus() {
+            document.querySelectorAll('.submenu').forEach(s => s.style.display = 'block');
+        }
+    
+
+        // ----------------------- FUNCIÓN PARA CARGAR DOCUMENTOS DE UNA SUBCATEGORÍA -----------------------
+        async function loadDocuments(e) {
+            e.preventDefault();
+            const category = this.dataset.category;
+            const estado = this.dataset.status;
+    
+            // Resaltar el enlace activo
+            subcategoryLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+    
+            // Mostrar estado de carga
+            documentsContainer.innerHTML = '<div class="loading">Cargando documentos...</div>';
+            errorContainer.innerHTML = '';
+    
+            try {
+                const response = await fetch(`/api/documentos?categoria=${category}&estado=${estado}`);
+                const documentos = await response.json();
+    
+                if (!Array.isArray(documentos) || documentos.length === 0) {
+                    documentsContainer.innerHTML = '<div class="empty-state">No hay documentos disponibles.</div>';
+                    return;
+                }
+    
+                currentDocuments = documentos;
+                displayDocuments(documentos, category);
+            } catch (err) {
+                errorContainer.innerHTML = `<div class="error-message">Error al cargar documentos: ${err.message}</div>`;
+            }
+        }
+    
+
+        function mostrarPreviewDesdeId(idTrabajo) {
+            const doc = currentDocuments.find(d => d.id_trabajo == idTrabajo);
+            if (!doc) {
+                alert("Documento no encontrado");
+                return;
+            }
+            mostrarPreview(doc);
+        }
+
+        // ----------------------- FUNCIÓN PARA MOSTRAR DOCUMENTOS EN FORMA DE TARJETAS -----------------------
+        function displayDocuments(documentos, category) {
+            documentsContainer.innerHTML = '';
+            documentos.forEach(doc => {
+                const card = document.createElement('div');
+                card.classList.add('document-card');
+
+                const rutaPdf = doc.ruta_documento_pdf || doc.ruta_documento || '';
+                const rutaWord = doc.ruta_documento_word || '';
+
+                let fechaModificada = '';
+                if (doc.fecha_modificacion) {
+                    const fecha = new Date(doc.fecha_modificacion);
+                    const dia = String(fecha.getDate()).padStart(2, '0');
+                    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+                    const anio = fecha.getFullYear();
+                    fechaModificada = `${dia}/${mes}/${anio}`;
+                }
+
+                card.innerHTML = `
+                    <div class="document-id">${doc.nombre_cliente}</div>
+                    <div class="document-type">ID cliente: ${doc.id_cliente}</div>
+                    <div class="document-type">ID trabajo: ${doc.id_trabajo}</div>
+                    <div class="document-type">Fecha modificación: ${fechaModificada}</div>
+                    <div class="document-actions">
+                        <button class="action-btn" onclick="mostrarPreviewDesdeId(${doc.id_trabajo})">Ver</button>
+                    </div>
+                `;
+                documentsContainer.appendChild(card);
+            });
+        }
+
+    
+
+        // ------------------------ FUNCIÓN PARA OCULTAR EL PANEL DE PREVISUALIZACIÓN -------------------------  
+        async function guardarBorradorPresupuesto() {
+            const descripcion = document.querySelector('#formulario-presupuesto textarea[placeholder^="Describe"]')?.value || '';
+            const infoAdicionalTexto = document.querySelector('#formulario-presupuesto textarea[placeholder^="Una condición"]')?.value || '';
+            const informacion_adicional = infoAdicionalTexto;
+
+            const conceptos = [];
+            document.querySelectorAll('.concepto-row').forEach((row) => {
+                const concepto = row.querySelector('.input-concepto')?.value || '';
+                const cantidadStr = row.querySelector('input[placeholder="Cantidad"]')?.value || "1";
+                const precioStr = row.querySelector('input[placeholder="Precio unitario (€)"]')?.value || "0";
+                const cantidad = parseFloat(cantidadStr.replace(',', '.'));
+                const precio_unitario = parseFloat(precioStr.replace(',', '.'));
+                if (concepto.trim() !== '') {
+                    conceptos.push({ concepto, cantidad, precio_unitario });
+                }
+            });
+
+            try {
+                const doc = currentDocuments.find(d => d.id_trabajo == globalIdTrabajo);
+                const esFactura = doc?.categoria === 'facturas';
+                const payload = {
+                    id_trabajo: globalIdTrabajo,
+                    descripcion,
+                    conceptos
+                };
+                if (esFactura) {
+                    payload.informacion_adicional = infoAdicionalTexto;
+                } else {
+                    payload.condiciones = infoAdicionalTexto;
+                }
+
+                const endpoint = esFactura ? '/api/guardar_borrador_factura' : '/api/guardar_borrador_presupuesto';
+                    await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                 // 🔁 Actualizar también el array en memoria
+                if (doc) {
+                    doc.descripcion = descripcion;
+                    if (esFactura) {
+                        doc.informacion_adicional = infoAdicionalTexto;
+                    } else {
+                        doc.condiciones = infoAdicionalTexto;
+                    }
+                    doc.conceptos = conceptos;
+                }
+            } catch (error) {
+                console.warn("Error al guardar borrador:", error);
+            }
+        }
+
+
+        function closePreview() {
+            guardarBorradorPresupuesto();
+
+            previewPane.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+    
+
+        // -------------------------- FUNCIÓN PARA FILTRAR DOCUMENTOS SEGÚN BÚSQUEDA --------------------------
+        function filterDocuments() {
+            const term = searchInput.value.toLowerCase();
+            const filtrados = currentDocuments.filter(doc =>
+                doc.id_trabajo.toString().includes(term) ||
+                (doc.nombre_cliente && doc.nombre_cliente.toLowerCase().includes(term))
+            );
+            displayDocuments(filtrados, filtrados[0]?.categoria || '');
+        }
+
+
+       function activarBotonAñadirConcepto() {
+            const addRowBtn = document.querySelector('.add-row-btn');
+            const conceptosContainer = document.querySelector('.conceptos-container');
+
+            // Asegurarse de que el listener no se duplique
+            addRowBtn.removeEventListener('click', addConceptoRow); 
+            addRowBtn.addEventListener('click', addConceptoRow);
+        }
+
+        // Función que añade una nueva fila de concepto
+        function addConceptoRow() {
+            const row = document.createElement('div');
+            row.classList.add('concepto-row');
+            row.setAttribute('draggable', 'true');
+
+            row.innerHTML = `
+                <div class="drag-handle" title="Arrastrar">☰</div>
+                <textarea placeholder="Concepto" rows="1" class="input-concepto"></textarea>
+                <input type="number" placeholder="Cantidad" min="0" step="1">
+                <input type="number" placeholder="Precio unitario (€)" min="0" step="0.1">
+                <button class="remove-row-btn" title="Eliminar fila">🗑</button>
+            `;
+
+            // Eliminar fila
+            row.querySelector('.remove-row-btn').addEventListener('click', () => row.remove());
+
+            // Ajustar el tamaño del textarea cuando se escribe
+            row.querySelector('.input-concepto').addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 76) + 'px'; // 2 líneas máximo
+            });
+
+            const conceptosContainer = document.querySelector('.conceptos-container');
+            if (conceptosContainer) {
+                conceptosContainer.appendChild(row);
+            }
+
+            // Reasignar la función de arrastrar
+            activarReordenacionConceptos();
+        }
+
+
+        function activarReordenacionConceptos() {
+            const container = document.querySelector('.conceptos-container');
+
+            container.querySelectorAll('.concepto-row').forEach(row => {
+                row.setAttribute('draggable', true);
+
+                row.addEventListener('dragstart', (e) => {
+                    row.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                row.addEventListener('dragend', () => {
+                    row.classList.remove('dragging');
+                });
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const dragging = container.querySelector('.dragging');
+                if (afterElement == null) {
+                    container.appendChild(dragging);
+                } else {
+                    container.insertBefore(dragging, afterElement);
+                }
+            });
+
+            function getDragAfterElement(container, y) {
+                const rows = [...container.querySelectorAll('.concepto-row:not(.dragging)')];
+                return rows.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+        }
+
+        async function aprobarPresupuesto() {
+            if (!globalIdTrabajo) {
+                alert('No se ha encontrado el ID del trabajo.');
+                return;
+            }
+
+            // 1. Guardar borrador actualizado
+            await guardarBorradorPresupuesto();
+
+            // 2. Obtener el presupuesto actual desde el array en memoria
+            const doc = currentDocuments.find(d => d.id_trabajo == globalIdTrabajo);
+            const esFactura = doc?.categoria === 'facturas';
+
+            if (!doc) {
+                alert('Presupuesto no encontrado.');
+                return;
+            }
+
+            const canal = doc.canal;
+            const identificador_cliente = doc.identificador_cliente;
+
+            if (!canal || !identificador_cliente) {
+                alert("No se ha encontrado ningún canal de comunicación asociado al presupuesto.");
+                return;
+            }
+
+            return new Promise((resolve) => {
+                const popupConfirmacion = document.getElementById("popup-confirmacion");
+                const textoConfirmacion = document.getElementById("texto-confirmacion");
+                const btnConfirmar = document.getElementById("btn-confirmar");
+                const btnCancelar = document.getElementById("btn-cancelar");
+
+                textoConfirmacion.textContent = esFactura
+                    ? "¿Estás seguro de que deseas aprobar esta factura? Se enviará al cliente."
+                    : "¿Estás seguro de que deseas aprobar este presupuesto? Se enviará al cliente.";
+
+                popupConfirmacion.classList.add("active");
+
+                const limpiar = () => {
+                    popupConfirmacion.classList.remove("active");
+                    btnConfirmar.removeEventListener("click", onConfirmar);
+                    btnCancelar.removeEventListener("click", onCancelar);
+                };
+
+                const onConfirmar = async () => {
+                    limpiar();
+                    await continuarAprobacion(); // función que ejecuta el resto
+                    resolve();
+                };
+
+                const onCancelar = () => {
+                    limpiar();
+                    resolve();
+                };
+
+                btnConfirmar.addEventListener("click", onConfirmar);
+                btnCancelar.addEventListener("click", onCancelar);
+            });
+        }
+
+        async function continuarAprobacion() {
+            const doc = currentDocuments.find(d => d.id_trabajo == globalIdTrabajo);
+            const esFactura = doc?.categoria === 'facturas';
+            const canal = doc.canal;
+            const identificador_cliente = doc.identificador_cliente;
+
+            document.getElementById('popup-text').textContent = esFactura ? "Generando factura..." : "Generando presupuesto...";
+            document.getElementById('generating-popup').classList.add('active');
+
+            try {
+                const endpoint = esFactura ? '/api/aprobar_factura' : '/api/aprobar_presupuesto';
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_trabajo: globalIdTrabajo })
+                });
+
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    // Popup de éxito, no alert
+                    const popup = document.getElementById("popup-confirmacion");
+                    const content = document.querySelector("#popup-confirmacion .popup-content");
+                    content.innerHTML = `<p style="font-size:18px; color:green;"> ${esFactura ? 'Factura' : 'Presupuesto'} aprobado y enviado correctamente.</p>`;
+                    setTimeout(() => popup.classList.remove("active"), 2000);
+                    closePreview();
+                    const activeLink = document.querySelector('.subcategory-link.active');
+                    if (activeLink) activeLink.click();
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (error) {
+                console.error('Error al aprobar:', error);
+                alert('Error al aprobar el documento.');
+            } finally {
+                document.getElementById('generating-popup').classList.remove('active');
+            }
+        }
+
+
+
+
+        // --------------------------- FUNCIÓN PARA MOSTRAR PANEL CON VISTA PREVIA ---------------------------
+        async function mostrarPreview(doc) {
+            try {
+                documentFrame.innerHTML = '<div class="loading">Cargando documento...</div>';
+                previewPane.classList.add('active');
+                overlay.classList.add('active');
+
+                const formularioPresupuesto = document.getElementById('formulario-presupuesto');
+
+                const idCliente = doc.id_cliente;
+                const rutaDocumento = doc.ruta_documento_pdf || doc.ruta_documento || '';
+                const rutaWord = doc.ruta_documento_word || '';
+                const categoria = doc.categoria || 'presupuestos';
+                const estado = doc.estado;
+                const idTrabajo = doc.id_trabajo;
+                globalIdTrabajo = idTrabajo;
+
+                // Facturas
+                esFactura = categoria === 'facturas'; 
+                formularioPresupuesto.style.display = estado === 'pendiente' ? 'block' : 'none';
+
+                const tituloFormulario = document.querySelector('#formulario-presupuesto h3');
+                const botonGenerar = document.querySelector('.generate-btn');
+                const botonAprobar = document.querySelector('.approve-btn');
+
+                if (tituloFormulario) tituloFormulario.textContent = esFactura ? 'GENERACIÓN FACTURA' : 'GENERACIÓN PRESUPUESTO';
+                if (botonGenerar) botonGenerar.textContent = esFactura ? 'Generar factura' : 'Generar presupuesto';
+                if (botonAprobar) botonAprobar.textContent = esFactura ? 'Aprobar factura' : 'Aprobar presupuesto';
+
+
+                // Rellenar campos de formulario
+                const textareaDesc = document.querySelector('#formulario-presupuesto textarea[placeholder^="Describe"]');
+                if (textareaDesc) textareaDesc.value = doc.descripcion || '';
+
+                const textareaCond = document.querySelector('#formulario-presupuesto textarea[placeholder^="Una condición"]');
+                const etiquetaCond = document.getElementById('etiqueta-condiciones');
+
+                if (etiquetaCond) etiquetaCond.textContent = esFactura ? "Información adicional" : "Condiciones";
+                if (textareaCond) textareaCond.value = esFactura ? (doc.informacion_adicional || '') : (doc.condiciones || '');
+
+                const conceptosContainer = document.querySelector('.conceptos-container');
+                conceptosContainer.innerHTML = '';
+                if (Array.isArray(doc.conceptos)) {
+                    doc.conceptos.forEach(item => {
+                        const row = document.createElement('div');
+                        row.classList.add('concepto-row');
+                        row.setAttribute('draggable', 'true');
+                        row.innerHTML = `
+                            <div class="drag-handle" title="Arrastrar">☰</div>
+                            <textarea placeholder="Concepto" rows="1" class="input-concepto">${item.concepto || ''}</textarea>
+                            <input type="number" placeholder="Cantidad" min="0" step="1" value="${item.cantidad || 1}">
+                            <input type="number" placeholder="Precio unitario (€)" min="0" step="0.1" value="${item.precio_unitario || 0}">
+                            <button class="remove-row-btn" title="Eliminar fila">🗑</button>
+                        `;
+                        row.querySelector('.remove-row-btn').addEventListener('click', () => row.remove());
+                        conceptosContainer.appendChild(row);
+                    });
+                }
+
+                activarBotonAñadirConcepto();
+
+                // Obtener datos cliente
+                const safe = (v) => (v === null || v === undefined || v === "null") ? "" : v;
+                const response = await fetch(`/api/clientes/${idCliente}`);
+                const cliente = await response.json();
+                
+                const fichaHTML = generarFichaEditableCliente(cliente);
+                document.getElementById("presupuesto-datos-cliente").innerHTML = fichaHTML;
+                activarBotonesEdicionCliente();
+
+                // Mostrar documento
+                const extension = rutaDocumento?.split('.').pop().toLowerCase();
+                const urlDocumento = rutaDocumento ? `/api/view-document?file=${encodeURIComponent(rutaDocumento)}` : null;
+                const urlWord = rutaWord ? `/api/view-document?file=${encodeURIComponent(rutaWord)}` : null;
+
+                documentFrame.classList.remove('frame-descargable', 'con-pdf');
+                if (extension === 'pdf' && rutaDocumento && rutaDocumento !== 'null' && rutaDocumento !== '') {
+                    documentFrame.classList.add('con-pdf');
+                    documentFrame.innerHTML = `
+                        <div style="position: relative; height: 100%;">
+                            <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+                                <a href="${urlDocumento}" target="_blank"
+                                style="display: inline-block; margin-left: 10px; padding: 8px 16px; background-color: #2196F3;
+                                        color: white; text-decoration: none; border-radius: 4px;">
+                                    Abrir en una pestaña nueva
+                                </a>
+                                ${estado === 'pendiente' && urlWord ? `
+                                <a href="${urlWord}" target="_blank"
+                                style="display: inline-block; margin-left: 10px; padding: 8px 16px; background-color: #2196F3;
+                                        color: white; text-decoration: none; border-radius: 4px;">
+                                    Descargar Word
+                                </a>` : ''}
+                            </div>
+                            <embed src="${urlDocumento}" type="application/pdf" width="100%" height="500px">
+                        </div>`;
+                } else {
+                    documentFrame.classList.add('frame-descargable');
+                    documentFrame.innerHTML = `
+                        <div style="text-align: center;">
+                            <p style="margin-bottom: 20px;">Este documento no puede mostrarse directamente.</p>
+                            <button class="generate-btn" onclick="window.open('${urlWord || urlDocumento}', '_blank')">
+                                Descargar documento
+                            </button>
+                        </div>`;
+                }
+
+                const bloqueAprobar = document.getElementById('bloque-aprobar');
+
+
+                botonAprobar.onclick = async () => {
+                    if (botonAprobar.textContent === "Ya está pagada") {
+                        const confirmar = confirm("¿Confirmas que se ha recibido el pago?");
+                        if (!confirmar) return;
+
+                        const doc = currentDocuments.find(d => d.id_trabajo == globalIdTrabajo);
+                        if (!doc) return;
+
+                        try {
+                            const res = await fetch("/api/marcar_factura_pagada", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    id_trabajo: doc.id_trabajo,
+                                    canal: doc.canal,
+                                    identificador_cliente: doc.identificador_cliente
+                                })
+                            });
+
+                            const data = await res.json();
+                            if (data.ok) {
+                                alert("Factura marcada como pagada y mensaje enviado al cliente.");
+                                closePreview();
+                                const activeLink = document.querySelector('.subcategory-link.active');
+                                if (activeLink) activeLink.click();
+                            } else {
+                                alert("Error al marcar como pagada.");
+                            }
+                        } catch (err) {
+                            console.error("Error al enviar la solicitud:", err);
+                            alert("Error inesperado.");
+                        }
+                    }
+                };
+
+                if (estado === 'pendiente') {
+                    bloqueAprobar.style.display = 'block';
+                    botonAprobar.style.display = 'inline-block';
+                    botonAprobar.disabled = false;
+                    botonAprobar.textContent = esFactura ? 'Aprobar factura' : 'Aprobar presupuesto';
+                    inicializarBotonGenerarPresupuesto();
+                } else if (esFactura && estado === 'revisado') {
+                    bloqueAprobar.style.display = 'block';
+                    botonAprobar.style.display = 'inline-block';
+                    botonAprobar.textContent = 'Ya está pagada';
+                } else {
+                    bloqueAprobar.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Error en mostrarPreview:", err);
+                documentFrame.innerHTML = `<div class="error-message">Error al cargar documento: ${err.message}</div>`;
+            }
+        }
+
+
+        
+        function inicializarBotonGenerarPresupuesto() {
+            const botonGenerar = document.querySelector('.generate-btn');
+            if (botonGenerar) {
+                botonGenerar.addEventListener('click', async () => {
+                    const doc = currentDocuments.find(d => d.id_trabajo == globalIdTrabajo);  // 🔹 AÑADIDO
+                    const esFactura = doc?.categoria === 'facturas';
+
+                    const descripcion = document.querySelector('#formulario-presupuesto textarea[placeholder^="Describe"]')?.value;
+                    const condicionesTexto = document.querySelector('#formulario-presupuesto textarea[placeholder^="Una condición"]')?.value;
+                    const condiciones = condicionesTexto ? condicionesTexto.split('\n').map(c => c.trim()).filter(Boolean) : [];
+
+                    const conceptos = [];
+                    document.querySelectorAll('.concepto-row').forEach((row) => {
+                        const concepto = row.querySelector('.input-concepto')?.value;
+
+                        let cantidadStr = row.querySelector('input[placeholder="Cantidad"]')?.value || "";
+                        cantidadStr = cantidadStr.replace(',', '.');
+                        let cantidad = parseFloat(cantidadStr);
+                        if (isNaN(cantidad) || cantidad <= 0) {
+                            cantidad = 1;
+                        }
+
+                        let precioStr = row.querySelector('input[placeholder="Precio unitario (€)"]')?.value || "";
+                        precioStr = precioStr.replace(',', '.');
+
+                        let precio = parseFloat(precioStr);
+                        conceptos.push({ concepto, cantidad, precio_unitario: precio });
+                    });
+
+                    const idTexto = document.querySelector('#presupuesto-datos-cliente')?.textContent?.match(/ID cliente:\s*(\d+)/);
+                    const idCliente = idTexto ? parseInt(idTexto[1]) : null;
+
+                    if (!idCliente) {
+                        alert("No se ha podido recuperar el ID del cliente. Asegúrate de haber cargado el documento correctamente.");
+                        return;
+                    }
+
+                    if (!idCliente || conceptos.length === 0) {
+                        alert("Faltan datos para generar el presupuesto.");
+                        return;
+                    }
+
+                    document.getElementById('popup-text').textContent = esFactura ? "Generando factura..." : "Generando presupuesto...";
+                    document.getElementById('generating-popup').classList.add('active');
+                    await new Promise(resolve => setTimeout(resolve, 1500));  // espera 
+
+                    try {
+                        const endpoint = esFactura ? '/api/generar_factura' : '/api/generar_presupuesto';
+                        const payload = {
+                            id_cliente: idCliente,
+                            id_trabajo: globalIdTrabajo,
+                            descripcion,
+                            conceptos,
+                            ...(esFactura
+                                ? { informacion_adicional: condicionesTexto }
+                                : { condiciones: condicionesTexto }
+                            )
+                        };
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+                        const docActualizado = currentDocuments.find(d => d.id_trabajo == globalIdTrabajo);
+                        if (docActualizado) {
+                            docActualizado.ruta_documento_pdf = data.ruta_pdf;
+                            docActualizado.ruta_documento_word = data.ruta_word;
+                            await guardarBorradorPresupuesto(); // Guarda ANTES
+                            mostrarPreview(docActualizado);     // Luego recarga el documento
+                            document.getElementById('generating-popup').classList.remove('active');
+                        }
+                    } catch (error) {
+                        document.getElementById('generating-popup').classList.remove('active');
+                        alert("Error al generar el presupuesto.");
+                        console.error(error);
+                    }
+                });
+            }
+        }
+
+
+        function generarFichaEditableCliente(cliente) {
+            const safe = (v) => (v === null || v === undefined || v === "null") ? "" : v;
+            return `
+                <div class="info-cliente-completa">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div id="bloque-nombre">
+                            <h2 class="cliente-nombre" id="cliente-nombre-texto">${safe(cliente.nombre)}</h2>
+                            <input type="text" id="input-nombre" class="cliente-input" value="${safe(cliente.nombre)}" style="display:none;">
+                        </div>
+                        <div>
+                            <button id="editar-cliente" class="boton-cliente" title="Editar datos">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20h9" />
+                                    <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                                </svg>
+                                </button>
+
+                                <button id="guardar-cliente" class="boton-cliente" title="Guardar cambios" style="display:none;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                    <polyline points="17 21 17 13 7 13 7 21"/>
+                                    <polyline points="7 3 7 8 15 8"/>
+                                </svg>
+                            </button>
+
+                        </div>
+                    </div>
+
+                    <div id="separador-nombre-datos" style="height: 0px;"></div>
+
+                    <div class="info-grid-dos-columnas">
+                        <input type="hidden" id="input-id" value="${safe(cliente.id_cliente)}">
+                        <div><strong>DNI:</strong> <span id="dni-texto">${safe(cliente.dni)}</span><input class="cliente-input" id="input-dni" value="${safe(cliente.dni)}" style="display:none;"></div>
+                        <div><strong>Teléfono:</strong> <span id="telefono-texto">${safe(cliente.telefono)}</span><input class="cliente-input" id="input-telefono" value="${safe(cliente.telefono)}" style="display:none;"></div>
+                        <div><strong>Correo:</strong> <span id="correo-texto">${safe(cliente.correo)}</span><input class="cliente-input" id="input-correo" value="${safe(cliente.correo)}" style="display:none;"></div>
+                        <div><strong>Dirección:</strong> <span id="direccion-texto">${safe(cliente.direccion)}</span><input class="cliente-input" id="input-direccion" value="${safe(cliente.direccion)}" style="display:none;"></div>
+                        <div><strong>Población:</strong> <span id="poblacion-texto">${safe(cliente.poblacion)}</span><input class="cliente-input" id="input-poblacion" value="${safe(cliente.poblacion)}" style="display:none;"></div>
+                        <div><strong>Código Postal:</strong> <span id="cp-texto">${safe(cliente.cp)}</span><input class="cliente-input" id="input-cp" value="${safe(cliente.cp)}" style="display:none;"></div>
+                        <div><strong>Provincia:</strong> <span id="provincia-texto">${safe(cliente.provincia)}</span><input class="cliente-input" id="input-provincia" value="${safe(cliente.provincia)}" style="display:none;"></div>
+                    </div>
+                </div>`;
+        }
+
+
+        function activarBotonesEdicionCliente() {
+            const btnEditar = document.getElementById("editar-cliente");
+            const btnGuardar = document.getElementById("guardar-cliente");
+
+            btnEditar.onclick = () => {
+                document.querySelectorAll(".cliente-input").forEach(inp => inp.style.display = "inline-block");
+                document.querySelectorAll("#presupuesto-datos-cliente span, #cliente-nombre-texto").forEach(el => el.style.display = "none");
+                btnEditar.style.display = "none";
+                btnGuardar.style.display = "inline-block";
+                document.getElementById("separador-nombre-datos").style.height = "16px";
+            };
+
+            btnGuardar.onclick = async () => {
+                const payload = {
+                    id_cliente: document.getElementById("input-id").value,
+                    nombre: document.getElementById("input-nombre").value,
+                    dni: document.getElementById("input-dni").value,
+                    telefono: document.getElementById("input-telefono").value,
+                    correo: document.getElementById("input-correo").value,
+                    direccion: document.getElementById("input-direccion").value,
+                    poblacion: document.getElementById("input-poblacion").value,
+                    cp: document.getElementById("input-cp").value,
+                    provincia: document.getElementById("input-provincia").value
+                };
+
+                try {
+                    await fetch('/api/actualizar_cliente', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Actualiza los textos
+                    document.getElementById("cliente-nombre-texto").textContent = payload.nombre;
+                    document.getElementById("dni-texto").textContent = payload.dni;
+                    document.getElementById("telefono-texto").textContent = payload.telefono;
+                    document.getElementById("correo-texto").textContent = payload.correo;
+                    document.getElementById("direccion-texto").textContent = payload.direccion;
+                    document.getElementById("poblacion-texto").textContent = payload.poblacion;
+                    document.getElementById("cp-texto").textContent = payload.cp;
+                    document.getElementById("provincia-texto").textContent = payload.provincia;
+
+                    // Cambia a modo visual
+                    document.querySelectorAll(".cliente-input").forEach(inp => inp.style.display = "none");
+                    document.querySelectorAll("#presupuesto-datos-cliente span, #cliente-nombre-texto").forEach(el => el.style.display = "inline");
+                    btnEditar.style.display = "inline-block";
+                    btnGuardar.style.display = "none";
+                    document.getElementById("separador-nombre-datos").style.height = "0px";
+
+                } catch (err) {
+                    alert("Error al actualizar cliente.");
+                    console.error("Error al actualizar cliente:", err);
+                }
+            };
+        }
+
+
+
+
+
+        // --------------------------- FUNCIÓN PARA FORMATEAR NOMBRE DE LOS CAMPOS ---------------------------
+        function formatFieldName(key) {
+            const fieldMappings = {
+                'id_cliente': 'ID',
+                'nombre': 'Nombre',
+                'dni': 'DNI',
+                'telefono': 'Teléfono',
+                'correo': 'Correo',
+                'direccion': 'Dirección',
+                'cp': 'Código Postal',
+                'provincia': 'Provincia'
+            };
+            return fieldMappings[key] || key.charAt(0).toUpperCase() + key.slice(1);
+        }
+    
+        
+        // ----------------------------------- INICIALIZACIÓN DE LA PÁGINA -----------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            showAllSubmenus();
+            const defaultLink = document.querySelector('.subcategory-link[data-category="presupuestos"][data-status="pendiente"]');
+            if (defaultLink) defaultLink.click();
+            
+        });
+
+        // ------------------------ REFRESCO AUTOMÁTICO DE DOCUMENTOS ------------------------
+        let ultimaCategoria = null;
+        let ultimoEstado = null;
+
+        function obtenerCategoriaYEstadoActivos() {
+            const activa = document.querySelector('.subcategory-link.active');
+            if (activa) {
+                return [activa.dataset.category, activa.dataset.status];
+            }
+            return [null, null];
+        }
+
+        setInterval(async () => {
+            const [categoria, estado] = obtenerCategoriaYEstadoActivos();
+            if (!categoria || !estado || previewPane.classList.contains("active")) return;
+
+            if (categoria === ultimaCategoria && estado === ultimoEstado) {
+                try {
+                    const response = await fetch(`/api/documentos?categoria=${categoria}&estado=${estado}`);
+                    const documentos = await response.json();
+
+                    if (Array.isArray(documentos)) {
+                        currentDocuments = documentos;
+                        filterDocuments();  // aplica el filtro actual y recarga visual
+                    }
+                } catch (err) {
+                    console.warn("Error al recargar documentos automáticamente:", err);
+                }
+            }
+
+            ultimaCategoria = categoria;
+            ultimoEstado = estado;
+        }, 7000); // cada 7 segundos
+    </script>    
+</body>
+</html>
